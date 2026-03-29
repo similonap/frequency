@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
-type Mode = 'single' | 'multi' | 'world'
+type Mode  = 'single' | 'multi' | 'world'
 
 const COMPS = [
   { freq: 2.0,  phase: 0.0, speed: 0.90 },
@@ -20,14 +20,40 @@ const TARGETS: Record<string, number[]> = {
   world:   [0.11, 0.09, 0.08, 0.08, 0.07, 0.05, 0.04],
 }
 
-function OscilloscopeCanvas({ mode }: { mode: Mode | null }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animRef   = useRef<number>(0)
-  const timeRef   = useRef(0)
-  const modeRef   = useRef(mode)
-  const ampsRef   = useRef([0.24, 0, 0, 0, 0, 0, 0])
+// Canvas colours per theme
+const THEME_COLORS = {
+  dark: {
+    bg:        '#020407',
+    grid:      'rgba(0,255,136,0.055)',
+    axis:      'rgba(0,255,136,0.12)',
+    comp:      'rgba(0,255,136,0.18)',
+    wave:      '#00ff88',
+    glow:      '#00ff88',
+    glowBlur1: 10,
+    glowBlur2: 22,
+  },
+  light: {
+    bg:        '#eceae3',
+    grid:      'rgba(0,100,50,0.09)',
+    axis:      'rgba(0,100,50,0.18)',
+    comp:      'rgba(0,100,50,0.20)',
+    wave:      '#007a38',
+    glow:      '#007a38',
+    glowBlur1: 4,
+    glowBlur2: 8,
+  },
+}
 
-  useEffect(() => { modeRef.current = mode }, [mode])
+function OscilloscopeCanvas({ mode, isDark }: { mode: Mode | null; isDark: boolean }) {
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const animRef    = useRef<number>(0)
+  const timeRef    = useRef(0)
+  const modeRef    = useRef(mode)
+  const isDarkRef  = useRef(isDark)
+  const ampsRef    = useRef([0.24, 0, 0, 0, 0, 0, 0])
+
+  useEffect(() => { modeRef.current  = mode   }, [mode])
+  useEffect(() => { isDarkRef.current = isDark }, [isDark])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -35,7 +61,7 @@ function OscilloscopeCanvas({ mode }: { mode: Mode | null }) {
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect()
-      const dpr = window.devicePixelRatio || 1
+      const dpr  = window.devicePixelRatio || 1
       canvas.width  = rect.width  * dpr
       canvas.height = rect.height * dpr
     }
@@ -50,38 +76,23 @@ function OscilloscopeCanvas({ mode }: { mode: Mode | null }) {
       const h    = canvas.height / dpr
       const t    = timeRef.current
       const amps = ampsRef.current
+      const C    = isDarkRef.current ? THEME_COLORS.dark : THEME_COLORS.light
 
+      // Lerp amplitudes toward current mode target
       const tgt = TARGETS[modeRef.current ?? 'default']
       for (let i = 0; i < amps.length; i++) {
         amps[i] += (tgt[i] - amps[i]) * 0.05
       }
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.fillStyle = '#020407'
-      ctx.fillRect(0, 0, w, h)
+      ctx.clearRect(0, 0, w, h)
 
-      ctx.strokeStyle = 'rgba(0,255,136,0.055)'
-      ctx.lineWidth = 1
-      for (let i = 0; i <= 10; i++) {
-        const x = (i / 10) * w
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke()
-      }
-      for (let i = 0; i <= 8; i++) {
-        const y = (i / 8) * h
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke()
-      }
-
-      ctx.strokeStyle = 'rgba(0,255,136,0.12)'
-      ctx.setLineDash([3, 8])
-      ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke()
-      ctx.setLineDash([])
-
-      // Individual components (faint) for multi / world
+      // Faint individual components (multi / world)
       for (let i = 1; i < COMPS.length; i++) {
         if (amps[i] < 0.01) continue
         const { freq, phase, speed } = COMPS[i]
         ctx.save()
-        ctx.strokeStyle = 'rgba(0,255,136,0.18)'
+        ctx.strokeStyle = C.comp
         ctx.lineWidth = 1
         ctx.beginPath()
         for (let px = 0; px <= w; px++) {
@@ -92,12 +103,14 @@ function OscilloscopeCanvas({ mode }: { mode: Mode | null }) {
         ctx.restore()
       }
 
-      // Composite line (ghost + glow + sharp)
+      // Composite line — ghost + glow + sharp
       const drawComposite = (alpha: number, blur: number, tOff: number) => {
         ctx.save()
-        ctx.strokeStyle = `rgba(0,255,136,${alpha})`
+        ctx.strokeStyle = isDarkRef.current
+          ? `rgba(0,255,136,${alpha})`
+          : `rgba(0,122,56,${alpha})`
         ctx.lineWidth = 1.5
-        if (blur > 0) { ctx.shadowBlur = blur; ctx.shadowColor = '#00ff88' }
+        if (blur > 0) { ctx.shadowBlur = blur; ctx.shadowColor = C.glow }
         ctx.beginPath()
         for (let px = 0; px <= w; px++) {
           let y = 0
@@ -113,10 +126,10 @@ function OscilloscopeCanvas({ mode }: { mode: Mode | null }) {
         ctx.restore()
       }
 
-      drawComposite(0.06, 0,  -0.12)
-      drawComposite(0.12, 0,  -0.06)
-      drawComposite(0.45, 10,  0)
-      drawComposite(1.0,  22,  0)
+      drawComposite(0.06, 0,               -0.12)
+      drawComposite(0.14, 0,               -0.06)
+      drawComposite(0.50, C.glowBlur1,      0)
+      drawComposite(1.0,  C.glowBlur2,      0)
 
       timeRef.current += 0.016
       animRef.current = requestAnimationFrame(draw)
@@ -157,15 +170,46 @@ function ModeIcon({ mode }: { mode: Mode }) {
   )
 }
 
+function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => void }) {
+  return (
+    <button className="theme-toggle" onClick={onToggle} title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}>
+      {isDark ? (
+        // Sun
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <line x1="12" y1="2"  x2="12" y2="5"  />
+          <line x1="12" y1="19" x2="12" y2="22" />
+          <line x1="2"  y1="12" x2="5"  y2="12" />
+          <line x1="19" y1="12" x2="22" y2="12" />
+          <line x1="4.22"  y1="4.22"  x2="6.34"  y2="6.34"  />
+          <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" />
+          <line x1="4.22"  y1="19.78" x2="6.34"  y2="17.66" />
+          <line x1="17.66" y1="6.34"  x2="19.78" y2="4.22"  />
+        </svg>
+      ) : (
+        // Moon
+        <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+        </svg>
+      )}
+    </button>
+  )
+}
+
 const MODE_META: { id: Mode; label: string; sub: string }[] = [
-  { id: 'single', label: 'Single',      sub: 'solo signal'       },
-  { id: 'multi',  label: 'Multiplayer', sub: 'sync wavelengths'  },
-  { id: 'world',  label: 'World',       sub: 'global broadcast'  },
+  { id: 'single', label: 'Single',      sub: 'solo signal'      },
+  { id: 'multi',  label: 'Multiplayer', sub: 'sync wavelengths' },
+  { id: 'world',  label: 'World',       sub: 'global broadcast' },
 ]
 
 function App() {
   const [hovered,  setHovered]  = useState<Mode | null>(null)
   const [launched, setLaunched] = useState<Mode | null>(null)
+  const [isDark,   setIsDark]   = useState(true)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
+  }, [isDark])
 
   if (launched) {
     return (
@@ -173,7 +217,7 @@ function App() {
         <button className="back-btn" onClick={() => setLaunched(null)}>← back</button>
         <div className="game-placeholder">
           <div className="placeholder-scope">
-            <OscilloscopeCanvas mode={launched} />
+            <OscilloscopeCanvas mode={launched} isDark={isDark} />
           </div>
           <p className="placeholder-label">{launched} · initializing signal...</p>
         </div>
@@ -183,17 +227,16 @@ function App() {
 
   return (
     <div className="start-screen">
-      <div className="scanlines" />
-
       <header className="site-header">
         <span className="header-mark">FREQ</span>
-        <span className="header-ver">v 0.1.0</span>
+        <div className="header-right">
+          <ThemeToggle isDark={isDark} onToggle={() => setIsDark(d => !d)} />
+          <span className="header-ver">v 0.1.0</span>
+        </div>
       </header>
 
       <section className="hero-section">
-        <p className="hero-eyebrow">audio · physics · game</p>
         <h1 className="game-title">FREQUENCY</h1>
-        <p className="hero-sub">tune your signal · find the resonance</p>
       </section>
 
       <section className="modes-section">
@@ -216,27 +259,9 @@ function App() {
 
       <section className="scope-section">
         <div className="scope-frame">
-          <div className="scope-bar top">
-            <span>CH1 · 1.0 V/div</span>
-            <span className="scope-live">● LIVE</span>
-            <span>10 ms/div</span>
-          </div>
-          <div className="scope-display">
-            <OscilloscopeCanvas mode={hovered} />
-          </div>
-          <div className="scope-bar bottom">
-            <span>f = 440 Hz</span>
-            <span>A4 · equal temperament</span>
-            <span>λ = 0.782 m</span>
-          </div>
+          <OscilloscopeCanvas mode={hovered} isDark={isDark} />
         </div>
       </section>
-
-      <footer className="site-footer">
-        <span>signal ready</span>
-        <span className="footer-glyph">◈</span>
-        <span>c = 343 m/s</span>
-      </footer>
     </div>
   )
 }

@@ -23,6 +23,22 @@
   text-rendering: optimizeLegibility;
 }
 
+[data-theme="light"] {
+  --bg:            #f0ede6;
+  --bg-scope:      #eceae3;
+  --green:         #007a38;
+  --green-dim:     rgba(0, 122, 56, 0.45);
+  --green-faint:   rgba(0, 122, 56, 0.10);
+  --text:          rgba(10, 15, 30, 0.88);
+  --text-dim:      rgba(10, 15, 30, 0.45);
+  --text-faint:    rgba(10, 15, 30, 0.22);
+  --border:        rgba(0, 0, 0, 0.10);
+  --border-active: rgba(0, 122, 56, 0.40);
+  --card-bg:       rgba(0, 0, 0, 0.02);
+  --card-hover:    rgba(0, 122, 56, 0.04);
+  color-scheme: light;
+}
+
 *,
 *::before,
 *::after {
@@ -32,11 +48,11 @@
 body {
   margin: 0;
   background: var(--bg);
-  /* Subtle graph-paper grid */
   background-image:
     linear-gradient(var(--green-faint) 1px, transparent 1px),
     linear-gradient(90deg, var(--green-faint) 1px, transparent 1px);
   background-size: 48px 48px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 h1, h2, h3, p {
