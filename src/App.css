@@ -1,0 +1,344 @@
+/* ─── Layout ─────────────────────────────────────────────── */
+
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  height: 100svh;
+  overflow: hidden;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 28px;
+  position: relative;
+}
+
+/* Subtle CRT scan-lines overlay */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    rgba(0, 0, 0, 0.07) 3px,
+    rgba(0, 0, 0, 0.07) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ─── Header ──────────────────────────────────────────────── */
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(12px, 2.2vh, 22px) 0;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-mark {
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+.header-ver {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+/* ─── Hero ────────────────────────────────────────────────── */
+
+.hero-section {
+  text-align: center;
+  padding: clamp(16px, 5vh, 64px) 0 clamp(12px, 3.5vh, 44px);
+  flex-shrink: 0;
+}
+
+.hero-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  margin-bottom: clamp(8px, 1.5vh, 18px);
+  text-transform: lowercase;
+}
+
+.game-title {
+  font-size: clamp(40px, 10vh, 128px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--text);
+  text-shadow: 0 0 100px rgba(0, 255, 136, 0.07);
+}
+
+.hero-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.12em;
+  margin-top: clamp(8px, 1.5vh, 18px);
+}
+
+/* ─── Oscilloscope ────────────────────────────────────────── */
+
+.scope-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: clamp(12px, 2.5vh, 52px);
+}
+
+.scope-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+
+.scope-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.scope-bar.top  { border-bottom: 1px solid var(--border); }
+.scope-bar.bottom { border-top: 1px solid var(--border); }
+
+.scope-live {
+  color: var(--green);
+  animation: pulse-live 2.2s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
+}
+
+.scope-display {
+  flex: 1;
+  min-height: 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.osc-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Mode Buttons ────────────────────────────────────────── */
+
+.modes-section {
+  flex-shrink: 0;
+  padding-bottom: clamp(10px, 2vh, 28px);
+}
+
+.modes-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--border);
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: clamp(16px, 3vh, 28px) 12px;
+  background: var(--card-bg);
+  border: none;
+  border-right: 1px solid var(--border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  font-family: inherit;
+  overflow: hidden;
+}
+
+.mode-btn:last-child { border-right: none; }
+
+/* green top accent bar */
+.mode-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: transparent;
+  transition: background 0.25s;
+}
+
+.mode-btn.is-active::before,
+.mode-btn:hover::before {
+  background: var(--green);
+}
+
+.mode-btn.is-active,
+.mode-btn:hover {
+  background: rgba(0, 255, 136, 0.03);
+}
+
+.mode-btn-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-btn-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--text-dim);
+  transition: stroke 0.25s, filter 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-icon svg,
+.mode-btn:hover .mode-btn-icon svg {
+  stroke: var(--green);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.75));
+}
+
+.mode-btn-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  text-transform: uppercase;
+  transition: color 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-label,
+.mode-btn:hover .mode-btn-label {
+  color: var(--green);
+}
+
+.mode-btn-sub {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  transition: color 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-sub,
+.mode-btn:hover .mode-btn-sub {
+  color: var(--text-dim);
+}
+
+/* ─── Footer ──────────────────────────────────────────────── */
+
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(10px, 1.5vh, 18px) 0;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+
+.footer-glyph {
+  color: var(--green);
+  opacity: 0.45;
+}
+
+/* ─── Game view (single player placeholder) ───────────────── */
+
+.game-view {
+  height: 100svh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 28px;
+  max-width: 1080px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.back-btn {
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  margin-bottom: clamp(16px, 4vh, 48px);
+  align-self: flex-start;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.back-btn:hover {
+  color: var(--green);
+}
+
+.game-placeholder {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.placeholder-scope {
+  width: 100%;
+  max-width: 680px;
+  flex: 1;
+  min-height: 0;
+  max-height: 300px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.placeholder-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+/* ─── Responsive ──────────────────────────────────────────── */
+
+@media (max-width: 720px) {
+  .start-screen,
+  .game-view {
+    padding: 0 16px;
+  }
+
+  .scope-bar {
+    font-size: 10px;
+  }
+
+  .scope-bar span:nth-child(2):not(.scope-live) {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .start-screen,
+  .game-view {
+    padding: 0 12px;
+  }
+
+  .scope-bar {
+    padding: 6px 10px;
+  }
+
+  .mode-btn-sub {
+    display: none;
+  }
+}
