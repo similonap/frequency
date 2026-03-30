@@ -117,8 +117,9 @@
 }
 
 .modes-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  justify-content: center;
+  gap: 2px;
 }
 
 .mode-btn {
@@ -127,7 +128,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: clamp(16px, 3vh, 28px) 12px;
+  padding: clamp(16px, 3vh, 28px) clamp(32px, 8vw, 80px);
   background: none;
   border: none;
   cursor: pointer;
@@ -270,6 +271,27 @@
   height: 100%;
 }
 
+/* Listen steps */
+.listen-steps {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-shrink: 0;
+  margin-bottom: clamp(8px, 1.5vh, 16px);
+}
+
+.listen-step {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  text-transform: lowercase;
+  transition: color 0.3s;
+}
+
+.listen-step.is-active {
+  color: var(--green);
+}
+
 /* Guess */
 .slider-section {
   flex-shrink: 0;
@@ -334,13 +356,46 @@
   cursor: pointer;
 }
 
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: clamp(10px, 1.5vh, 18px);
+}
+
+.slider-index {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--text-faint);
+  margin-right: 4px;
+}
+
 .slider-ends {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
   color: var(--text-faint);
   letter-spacing: 0.06em;
-  margin-top: 8px;
+  margin-top: 4px;
+}
+
+.result-sep {
+  margin: 0 8px;
+  color: var(--text-faint);
+}
+
+.result-score-pill {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+.result-score-pill.good {
+  color: var(--green);
+  border-color: var(--border-active);
 }
 
 .submit-btn {

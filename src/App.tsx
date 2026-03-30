@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 
-type Mode      = 'single' | 'multi' | 'world'
+type Mode      = 'single' | 'world'
 type GamePhase = 'listen' | 'guess' | 'result'
 
 // ── Main screen oscilloscope ───────────────────────────────────
@@ -19,7 +19,6 @@ const COMPS = [
 const TARGETS: Record<string, number[]> = {
   default: [0.24, 0,    0,    0,    0,    0,    0   ],
   single:  [0.34, 0,    0,    0,    0,    0,    0   ],
-  multi:   [0.18, 0.15, 0.10, 0,    0,    0,    0   ],
   world:   [0.11, 0.09, 0.08, 0.08, 0.07, 0.05, 0.04],
 }
 
@@ -112,17 +111,17 @@ function OscilloscopeCanvas({ mode, isDark }: { mode: Mode | null; isDark: boole
   return <canvas ref={canvasRef} className="osc-canvas" />
 }
 
-// ── Game: pure-sine canvas ────────────────────────────────────
+// ── Game: multi-frequency sine canvas ────────────────────────
 
-function FreqCanvas({ freq, isDark }: { freq: number; isDark: boolean }) {
+function FreqCanvas({ freqs, isDark }: { freqs: number[]; isDark: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const animRef   = useRef<number>(0)
   const timeRef   = useRef(0)
-  const freqRef   = useRef(freq)
+  const freqsRef  = useRef(freqs)
   const isDarkRef = useRef(isDark)
 
-  useEffect(() => { freqRef.current  = freq   }, [freq])
-  useEffect(() => { isDarkRef.current = isDark }, [isDark])
+  useEffect(() => { freqsRef.current  = freqs  }, [freqs])
+  useEffect(() => { isDarkRef.current = isDark  }, [isDark])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -143,15 +142,12 @@ function FreqCanvas({ freq, isDark }: { freq: number; isDark: boolean }) {
       const w    = canvas.width  / dpr
       const h    = canvas.height / dpr
       const t    = timeRef.current
-      const f    = freqRef.current
+      const fs   = freqsRef.current
       const dark = isDarkRef.current
+      const amp  = h * 0.36
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.clearRect(0, 0, w, h)
-
-      // cycles visible = f/100 so higher freq = more cycles = visually different
-      const cycles = f / 100
-      const amp    = h * 0.36
 
       const drawLine = (alpha: number, blur: number, tOff: number) => {
         ctx.save()
@@ -160,8 +156,13 @@ function FreqCanvas({ freq, isDark }: { freq: number; isDark: boolean }) {
         if (blur > 0) { ctx.shadowBlur = blur; ctx.shadowColor = dark ? '#00ff88' : '#007a38' }
         ctx.beginPath()
         for (let px = 0; px <= w; px++) {
-          const phase = (px / w) * cycles * Math.PI * 2 + (t + tOff) * 2.5
-          const y = h / 2 + amp * Math.sin(phase)
+          // sum all frequencies, normalise by count
+          let sum = 0
+          for (const f of fs) {
+            const cycles = f / 100
+            sum += Math.sin((px / w) * cycles * Math.PI * 2 + (t + tOff) * 2.5)
+          }
+          const y = h / 2 + amp * (sum / fs.length)
           px === 0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y)
         }
         ctx.stroke()
@@ -183,50 +184,61 @@ function FreqCanvas({ freq, isDark }: { freq: number; isDark: boolean }) {
   return <canvas ref={canvasRef} className="freq-canvas" />
 }
 
-// ── Web Audio ─────────────────────────────────────────────────
+// ── Web Audio (multi-oscillator) ──────────────────────────────
 
 function useAudio() {
-  const ctxRef  = useRef<AudioContext | null>(null)
-  const oscRef  = useRef<OscillatorNode | null>(null)
-  const gainRef = useRef<GainNode | null>(null)
+  const ctxRef   = useRef<AudioContext | null>(null)
+  const oscsRef  = useRef<OscillatorNode[]>([])
+  const gainsRef = useRef<GainNode[]>([])
 
   const ensure = () => {
     if (!ctxRef.current) ctxRef.current = new AudioContext()
     return ctxRef.current
   }
 
-  const play = useCallback((freq: number) => {
+  const stopAll = useCallback(() => {
+    if (!ctxRef.current) return
+    const ctx = ctxRef.current
+    gainsRef.current.forEach((gain, i) => {
+      gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime)
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08)
+      const osc = oscsRef.current[i]
+      setTimeout(() => { try { osc.stop(); osc.disconnect() } catch {} }, 120)
+    })
+    oscsRef.current  = []
+    gainsRef.current = []
+  }, [])
+
+  const play = useCallback((freqs: number[]) => {
     const ctx = ensure()
-    if (oscRef.current) { oscRef.current.frequency.value = freq; return }
-    const osc  = ctx.createOscillator()
-    const gain = ctx.createGain()
-    osc.connect(gain); gain.connect(ctx.destination)
-    osc.type = 'sine'
-    osc.frequency.value = freq
-    gain.gain.setValueAtTime(0, ctx.currentTime)
-    gain.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 0.06)
-    osc.start()
-    oscRef.current  = osc
-    gainRef.current = gain
+    // if already playing the right number, just tune them
+    if (oscsRef.current.length === freqs.length) {
+      freqs.forEach((f, i) => { oscsRef.current[i].frequency.value = f })
+      return
+    }
+    stopAll()
+    const vol = 0.18 / freqs.length  // keep loudness constant
+    freqs.forEach(f => {
+      const osc  = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain); gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.value = f
+      gain.gain.setValueAtTime(0, ctx.currentTime)
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.06)
+      osc.start()
+      oscsRef.current.push(osc)
+      gainsRef.current.push(gain)
+    })
+  }, [stopAll])
+
+  const setFreqs = useCallback((freqs: number[]) => {
+    freqs.forEach((f, i) => {
+      if (oscsRef.current[i]) oscsRef.current[i].frequency.value = f
+    })
   }, [])
 
-  const stop = useCallback(() => {
-    if (!gainRef.current || !ctxRef.current || !oscRef.current) return
-    const ctx  = ctxRef.current
-    const gain = gainRef.current
-    const osc  = oscRef.current
-    gain.gain.setValueAtTime(gain.gain.value, ctx.currentTime)
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.08)
-    setTimeout(() => { try { osc.stop(); osc.disconnect() } catch {} }, 120)
-    oscRef.current  = null
-    gainRef.current = null
-  }, [])
-
-  const setFreq = useCallback((freq: number) => {
-    if (oscRef.current) oscRef.current.frequency.value = freq
-  }, [])
-
-  return { play, stop, setFreq }
+  return { play, stop: stopAll, setFreqs }
 }
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -240,14 +252,31 @@ const sliderToFreq = (v: number) =>
 const freqToSlider = (f: number) =>
   Math.round(1000 * Math.log(f / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN))
 
-const randomFreq = () => {
-  const t = Math.random()
-  return Math.round(sliderToFreq(t * 1000) / 5) * 5
+const randomFreq = () =>
+  Math.round(sliderToFreq(Math.random() * 1000) / 5) * 5
+
+const randomTwoFreqs = (): [number, number] => {
+  let f1 = randomFreq(), f2 = randomFreq()
+  // ensure at least 4 semitones apart to be clearly distinguishable
+  while (Math.abs(1200 * Math.log2(f2 / f1)) < 400) f2 = randomFreq()
+  return f1 < f2 ? [f1, f2] : [f2, f1]
 }
 
 const calcScore = (target: number, guess: number) => {
   const cents = Math.abs(1200 * Math.log2(guess / target))
   return Math.max(0, Math.round(100 - cents / 12))
+}
+
+// Best-assignment matching: try both pairings, take higher total
+const calcDualScore = (targets: [number, number], guesses: [number, number]) => {
+  const [t1, t2] = targets
+  const [g1, g2] = guesses
+  const s_straight = calcScore(t1, g1) + calcScore(t2, g2)
+  const s_swapped  = calcScore(t1, g2) + calcScore(t2, g1)
+  if (s_straight >= s_swapped) {
+    return { total: Math.round(s_straight / 2), pairs: [[t1, g1], [t2, g2]] as const }
+  }
+  return { total: Math.round(s_swapped / 2), pairs: [[t1, g2], [t2, g1]] as const }
 }
 
 const scoreLabel = (s: number) => {
@@ -268,57 +297,58 @@ const freqToNote = (freq: number) => {
 
 // ── Game Screen ───────────────────────────────────────────────
 
+const LISTEN_STEPS = [
+  { label: 'freq · 1' },
+  { label: 'freq · 2' },
+  { label: 'combined' },
+] as const
+
 function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void }) {
-  const [phase,      setPhase]     = useState<GamePhase>('listen')
-  const [targetFreq, setTargetFreq] = useState(randomFreq)
-  const [guessFreq,  setGuessFreq]  = useState(440)
-  const [countdown,  setCountdown]  = useState(5)
+  const [phase,       setPhase]      = useState<GamePhase>('listen')
+  const [targetFreqs, setTargetFreqs] = useState<[number, number]>(randomTwoFreqs)
+  const [guessFreqs,  setGuessFreqs]  = useState<[number, number]>([220, 440])
+  const [listenStep,  setListenStep]  = useState<0 | 1 | 2>(0)
   const audio = useAudio()
 
-  // Stop audio on unmount
   useEffect(() => () => { audio.stop() }, [])
 
-  // Listen phase
+  // Listen phase: freq1 (2s) → freq2 (2s) → combined (2s) → guess
   useEffect(() => {
     if (phase !== 'listen') return
-    audio.play(targetFreq)
-    setCountdown(5)
-    const tick = setInterval(() => {
-      setCountdown(c => {
-        if (c <= 1) {
-          clearInterval(tick)
-          audio.stop()
-          setPhase('guess')
-          return 0
-        }
-        return c - 1
-      })
-    }, 1000)
-    return () => { clearInterval(tick); audio.stop() }
-  }, [phase, targetFreq])
+    setListenStep(0)
+    audio.play([targetFreqs[0]])
+    const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 2000)
+    const t2 = setTimeout(() => { setListenStep(2); audio.play(targetFreqs)      }, 4000)
+    const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 8000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
+  }, [phase, targetFreqs])
 
-  // Guess phase: play current guess
+  // Guess phase: play both guess tones
   useEffect(() => {
     if (phase !== 'guess') return
-    audio.play(guessFreq)
+    audio.play(guessFreqs)
     return () => audio.stop()
   }, [phase])
 
-  const handleSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = sliderToFreq(Number(e.target.value))
-    setGuessFreq(f)
-    audio.setFreq(f)
+  const handleSlider = (idx: 0 | 1, v: number) => {
+    const f    = sliderToFreq(v)
+    const next = [guessFreqs[0], guessFreqs[1]] as [number, number]
+    next[idx]  = f
+    setGuessFreqs(next)
+    audio.setFreqs(next)
   }
 
   const submit = () => { audio.stop(); setPhase('result') }
 
   const playAgain = () => {
-    setTargetFreq(randomFreq())
-    setGuessFreq(440)
+    setTargetFreqs(randomTwoFreqs())
+    setGuessFreqs([220, 440])
     setPhase('listen')
   }
 
-  const score = calcScore(targetFreq, guessFreq)
+  const { total, pairs } = calcDualScore(targetFreqs, guessFreqs)
+  // Sort pairs low→high by target freq so result always reads consistently
+  const sortedPairs = [...pairs].sort((a, b) => a[0] - b[0]) as typeof pairs
 
   return (
     <div className="game-screen">
@@ -327,31 +357,44 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
       {phase === 'listen' && (
         <div className="phase-listen">
           <p className="phase-label">listen carefully</p>
-          <div className="countdown">{countdown}</div>
+          <div className="listen-steps">
+            {LISTEN_STEPS.map((s, i) => (
+              <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>
+                {s.label}
+              </span>
+            ))}
+          </div>
           <div className="game-canvas-wrap">
-            <FreqCanvas freq={targetFreq} isDark={isDark} />
+            <FreqCanvas
+              freqs={listenStep === 0 ? [targetFreqs[0]] : listenStep === 1 ? [targetFreqs[1]] : targetFreqs}
+              isDark={isDark}
+            />
           </div>
         </div>
       )}
 
       {phase === 'guess' && (
         <div className="phase-guess">
-          <p className="phase-label">match the frequency</p>
+          <p className="phase-label">match both frequencies</p>
           <div className="game-canvas-wrap">
-            <FreqCanvas freq={guessFreq} isDark={isDark} />
+            <FreqCanvas freqs={guessFreqs} isDark={isDark} />
           </div>
           <div className="slider-section">
-            <div className="freq-display">
-              <span className="freq-hz">{guessFreq} Hz</span>
-              <span className="freq-note">{freqToNote(guessFreq)}</span>
-            </div>
-            <input
-              type="range"
-              className="freq-slider"
-              min={0} max={1000}
-              value={freqToSlider(guessFreq)}
-              onChange={handleSlider}
-            />
+            {([0, 1] as const).map(i => (
+              <div key={i} className="slider-row">
+                <div className="freq-display">
+                  <span className="freq-hz">{guessFreqs[i]} Hz</span>
+                  <span className="freq-note">{freqToNote(guessFreqs[i])}</span>
+                </div>
+                <input
+                  type="range"
+                  className="freq-slider"
+                  min={0} max={1000}
+                  value={freqToSlider(guessFreqs[i])}
+                  onChange={e => handleSlider(i, Number(e.target.value))}
+                />
+              </div>
+            ))}
             <div className="slider-ends">
               <span>{FREQ_MIN} Hz</span>
               <span>{FREQ_MAX} Hz</span>
@@ -364,30 +407,48 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
       {phase === 'result' && (
         <div className="phase-result">
           <div className="score-block">
-            <span className="score-num">{score}%</span>
-            <span className="score-label">{scoreLabel(score)}</span>
+            <span className="score-num">{total}%</span>
+            <span className="score-label">{scoreLabel(total)}</span>
           </div>
+
           <div className="result-waves">
             <div className="result-row">
               <div className="result-meta">
                 <span className="result-tag">original</span>
-                <span className="result-freq">{targetFreq} Hz · {freqToNote(targetFreq)}</span>
+                <span className="result-freq">
+                  {targetFreqs[0]} Hz · {freqToNote(targetFreqs[0])}
+                  <span className="result-sep">+</span>
+                  {targetFreqs[1]} Hz · {freqToNote(targetFreqs[1])}
+                </span>
               </div>
               <div className="game-canvas-wrap">
-                <FreqCanvas freq={targetFreq} isDark={isDark} />
+                <FreqCanvas freqs={targetFreqs} isDark={isDark} />
               </div>
             </div>
+
             <div className="result-divider" />
+
             <div className="result-row">
               <div className="result-meta">
                 <span className="result-tag">your answer</span>
-                <span className="result-freq">{guessFreq} Hz · {freqToNote(guessFreq)}</span>
+                <span className="result-freq">
+                  {sortedPairs[0][1]} Hz · {freqToNote(sortedPairs[0][1])}
+                  <span className={`result-score-pill ${calcScore(sortedPairs[0][0], sortedPairs[0][1]) >= 85 ? 'good' : ''}`}>
+                    {calcScore(sortedPairs[0][0], sortedPairs[0][1])}%
+                  </span>
+                  <span className="result-sep">+</span>
+                  {sortedPairs[1][1]} Hz · {freqToNote(sortedPairs[1][1])}
+                  <span className={`result-score-pill ${calcScore(sortedPairs[1][0], sortedPairs[1][1]) >= 85 ? 'good' : ''}`}>
+                    {calcScore(sortedPairs[1][0], sortedPairs[1][1])}%
+                  </span>
+                </span>
               </div>
               <div className="game-canvas-wrap">
-                <FreqCanvas freq={guessFreq} isDark={isDark} />
+                <FreqCanvas freqs={guessFreqs} isDark={isDark} />
               </div>
             </div>
           </div>
+
           <button className="submit-btn" onClick={playAgain}>play again →</button>
         </div>
       )}
@@ -402,15 +463,6 @@ function ModeIcon({ mode }: { mode: Mode }) {
     <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="8" r="4" />
       <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  )
-  if (mode === 'multi') return (
-    <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9"  cy="8" r="3.5" />
-      <circle cx="16" cy="8" r="3.5" />
-      <path d="M2 20c0-3.3 2.9-6 7-6" />
-      <path d="M15 14c4 0 7 2.5 7 6" />
-      <path d="M9 14c1-.4 2.2-.6 3.5-.6s2.5.2 3.5.6" />
     </svg>
   )
   return (
@@ -445,9 +497,8 @@ function ThemeToggle({ isDark, onToggle }: { isDark: boolean; onToggle: () => vo
 }
 
 const MODE_META: { id: Mode; label: string; sub: string }[] = [
-  { id: 'single', label: 'Single',      sub: 'solo signal'      },
-  { id: 'multi',  label: 'Multiplayer', sub: 'sync wavelengths' },
-  { id: 'world',  label: 'World',       sub: 'global broadcast' },
+  { id: 'single', label: 'Practice', sub: 'solo signal'    },
+  { id: 'world',  label: 'Daily',    sub: 'one shot a day' },
 ]
 
 // ── App ───────────────────────────────────────────────────────
