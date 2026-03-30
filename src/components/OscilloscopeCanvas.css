@@ -1,0 +1,19 @@
+.scope-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: clamp(12px, 2.5vh, 52px);
+}
+
+.scope-frame {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.osc-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

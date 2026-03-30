@@ -1,0 +1,251 @@
+.back-btn {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  align-self: flex-start;
+  transition: color 0.2s;
+  flex-shrink: 0;
+  margin-bottom: clamp(8px, 2vh, 20px);
+}
+
+.back-btn:hover { color: var(--green); }
+
+/* ─── Game Screen ─────────────────────────────────────────── */
+
+.game-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: clamp(12px, 2vh, 24px);
+}
+
+.phase-listen,
+.phase-guess,
+.phase-result {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.phase-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--text-dim);
+  text-transform: lowercase;
+  text-align: center;
+  flex-shrink: 0;
+  margin-bottom: clamp(4px, 1vh, 12px);
+}
+
+/* Listen */
+.game-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Listen steps */
+.listen-steps {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-shrink: 0;
+  margin-bottom: clamp(8px, 1.5vh, 16px);
+}
+
+.listen-step {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  text-transform: lowercase;
+  transition: color 0.3s;
+}
+
+.listen-step.is-active {
+  color: var(--green);
+}
+
+/* Guess */
+.slider-section {
+  flex-shrink: 0;
+  padding: clamp(12px, 2vh, 24px) 0 clamp(8px, 1.5vh, 16px);
+}
+
+.freq-display {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: clamp(8px, 1.5vh, 16px);
+}
+
+.freq-hz {
+  font-size: clamp(22px, 5vh, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.freq-note {
+  font-size: 13px;
+  color: var(--green);
+  letter-spacing: 0.08em;
+}
+
+.freq-slider {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 2px;
+  background: var(--border);
+  outline: none;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.freq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 10px rgba(0,255,136,0.5);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+[data-theme="light"] .freq-slider::-webkit-slider-thumb {
+  box-shadow: 0 0 6px rgba(0,122,56,0.4);
+}
+
+.freq-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+.freq-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--green);
+  border: none;
+  cursor: pointer;
+}
+
+.slider-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: clamp(10px, 1.5vh, 18px);
+}
+
+.slider-ends {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-faint);
+  letter-spacing: 0.06em;
+  margin-top: 4px;
+}
+
+.result-sep {
+  margin: 0 8px;
+  color: var(--text-faint);
+}
+
+.result-score-pill {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+.result-score-pill.good {
+  color: var(--green);
+  border-color: var(--border-active);
+}
+
+.submit-btn {
+  align-self: flex-end;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--green);
+  border: 1px solid var(--border-active);
+  padding: 10px 22px;
+  background: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+
+.submit-btn:hover {
+  background: var(--card-hover);
+}
+
+/* Result */
+.score-block {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-shrink: 0;
+  padding-bottom: clamp(8px, 2vh, 20px);
+}
+
+.score-num {
+  font-size: clamp(40px, 10vh, 80px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--green);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-label {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: lowercase;
+}
+
+.result-waves {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-shrink: 0;
+  padding-bottom: 6px;
+}
+
+.result-tag {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--text-dim);
+  text-transform: lowercase;
+}
+
+.result-freq {
+  font-size: 12px;
+  color: var(--green);
+  letter-spacing: 0.08em;
+}
+
+.result-divider {
+  height: 1px;
+  background: var(--border);
+  flex-shrink: 0;
+  margin: clamp(6px, 1.5vh, 14px) 0;
+}

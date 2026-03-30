@@ -1,0 +1,124 @@
+.modes-section {
+  flex-shrink: 0;
+  padding-bottom: clamp(10px, 2vh, 28px);
+}
+
+.modes-grid {
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: clamp(16px, 3vh, 28px) clamp(32px, 8vw, 80px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: transform 0.2s;
+}
+
+.mode-btn.is-active,
+.mode-btn:hover {
+  transform: scale(1.08);
+}
+
+.mode-btn-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mode-btn-icon svg {
+  width: 100%;
+  height: 100%;
+  stroke: var(--text-dim);
+  transition: stroke 0.25s, filter 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-icon svg,
+.mode-btn:hover .mode-btn-icon svg {
+  stroke: var(--green);
+  filter: drop-shadow(0 0 6px rgba(0, 255, 136, 0.75));
+}
+
+.mode-btn-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text);
+  text-transform: uppercase;
+  transition: color 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-label,
+.mode-btn:hover .mode-btn-label {
+  color: var(--green);
+}
+
+.mode-btn-sub {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-faint);
+  transition: color 0.25s;
+}
+
+.mode-btn.is-active .mode-btn-sub,
+.mode-btn:hover .mode-btn-sub {
+  color: var(--text-dim);
+}
+
+/* ─── Practice sub-modes (sliding panels) ────────────────── */
+
+.modes-switcher {
+  overflow: hidden;
+  width: 100%;
+}
+
+.modes-track {
+  display: flex;
+  width: 200%;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modes-track.is-expanded {
+  transform: translateX(-50%);
+}
+
+.modes-panel {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.modes-panel-hd {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sub-back {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  transition: color 0.2s;
+  padding: 4px 0;
+}
+
+.sub-back:hover { color: var(--green); }
+
+@media (max-width: 400px) {
+  .mode-btn-sub {
+    display: none;
+  }
+}

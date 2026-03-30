@@ -1,0 +1,30 @@
+import { FREQ_MIN, FREQ_MAX, NOTE_NAMES } from '../constants'
+
+// ── Frequency / slider conversion ─────────────────────────────
+
+export const sliderToFreq = (v: number): number =>
+  Math.round(FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, v / 1000))
+
+export const freqToSlider = (f: number): number =>
+  Math.round(1000 * Math.log(f / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN))
+
+// ── Random frequency generation ───────────────────────────────
+
+export const randomFreq = (): number =>
+  Math.round(sliderToFreq(Math.random() * 1000) / 5) * 5
+
+export const randomTwoFreqs = (): [number, number] => {
+  let f1 = randomFreq(), f2 = randomFreq()
+  // ensure at least 4 semitones apart to be clearly distinguishable
+  while (Math.abs(1200 * Math.log2(f2 / f1)) < 400) f2 = randomFreq()
+  return f1 < f2 ? [f1, f2] : [f2, f1]
+}
+
+// ── Note name lookup ──────────────────────────────────────────
+
+export const freqToNote = (freq: number): string => {
+  const semis  = Math.round(12 * Math.log2(freq / 440))
+  const idx    = ((semis % 12) + 12) % 12
+  const octave = 4 + Math.floor((semis + 9) / 12)
+  return `${NOTE_NAMES[idx]}${octave}`
+}

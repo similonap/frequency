@@ -1,0 +1,54 @@
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: clamp(12px, 2.2vh, 22px) 0;
+  flex-shrink: 0;
+}
+
+.header-mark {
+  font-size: 11px;
+  letter-spacing: 0.35em;
+  color: var(--green);
+  text-transform: uppercase;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-ver {
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.theme-toggle {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  transition: border-color 0.25s, background 0.25s;
+}
+
+.theme-toggle svg {
+  width: 14px;
+  height: 14px;
+  stroke: var(--text-dim);
+  transition: stroke 0.25s;
+}
+
+.theme-toggle:hover {
+  border-color: var(--border-active);
+  background: var(--card-hover);
+}
+
+.theme-toggle:hover svg {
+  stroke: var(--green);
+}
