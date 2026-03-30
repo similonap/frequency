@@ -189,30 +189,47 @@
 }
 
 
-/* ─── Practice sub-modes ─────────────────────────────────── */
+/* ─── Practice sub-modes (sliding panels) ────────────────── */
 
-.sub-modes {
+.modes-switcher {
+  overflow: hidden;
+  width: 100%;
+}
+
+.modes-track {
+  display: flex;
+  width: 200%;
+  transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modes-track.is-expanded {
+  transform: translateX(-50%);
+}
+
+.modes-panel {
+  width: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  animation: fadeUp 0.22s ease both;
+  gap: 6px;
+}
+
+.modes-panel-hd {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .sub-back {
   font-size: 10px;
   letter-spacing: 0.14em;
-  color: var(--text-faint);
+  color: var(--text-dim);
   transition: color 0.2s;
-  align-self: center;
+  padding: 4px 0;
 }
 
 .sub-back:hover { color: var(--green); }
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 
 /* ─── Game view ───────────────────────────────────────────── */
 

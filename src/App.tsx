@@ -591,40 +591,57 @@ function App() {
       </section>
 
       <section className="modes-section">
-        {practiceExpanded ? (
-          <div className="sub-modes">
-            <button className="sub-back" onClick={() => setPracticeExpanded(false)}>← practice</button>
-            <div className="modes-grid">
-              {PRACTICE_SUBS.map(({ count, label, sub, icon }) => (
-                <button
-                  key={count}
-                  className="mode-btn"
-                  onClick={() => launchPractice(count)}
-                >
-                  <div className="mode-btn-icon">{icon}</div>
-                  <span className="mode-btn-label">{label}</span>
-                  <span className="mode-btn-sub">{sub}</span>
-                </button>
-              ))}
+        <div className="modes-switcher">
+          <div className={`modes-track${practiceExpanded ? ' is-expanded' : ''}`}>
+
+            {/* Panel 1 — main modes */}
+            <div className="modes-panel">
+              <div className="modes-panel-hd" />
+              <div className="modes-grid">
+                {MODE_META.map(({ id, label, sub }) => (
+                  <button
+                    key={id}
+                    className={`mode-btn${hovered === id ? ' is-active' : ''}`}
+                    onMouseEnter={() => setHovered(id)}
+                    onMouseLeave={() => setHovered(null)}
+                    onClick={() => handleModeClick(id)}
+                    tabIndex={practiceExpanded ? -1 : 0}
+                  >
+                    <div className="mode-btn-icon"><ModeIcon mode={id} /></div>
+                    <span className="mode-btn-label">{label}</span>
+                    <span className="mode-btn-sub">{sub}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Panel 2 — practice sub-modes */}
+            <div className="modes-panel">
+              <div className="modes-panel-hd">
+                <button
+                  className="sub-back"
+                  onClick={() => setPracticeExpanded(false)}
+                  tabIndex={practiceExpanded ? 0 : -1}
+                >← back</button>
+              </div>
+              <div className="modes-grid">
+                {PRACTICE_SUBS.map(({ count, label, sub, icon }) => (
+                  <button
+                    key={count}
+                    className="mode-btn"
+                    onClick={() => launchPractice(count)}
+                    tabIndex={practiceExpanded ? 0 : -1}
+                  >
+                    <div className="mode-btn-icon">{icon}</div>
+                    <span className="mode-btn-label">{label}</span>
+                    <span className="mode-btn-sub">{sub}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
           </div>
-        ) : (
-          <div className="modes-grid">
-            {MODE_META.map(({ id, label, sub }) => (
-              <button
-                key={id}
-                className={`mode-btn${hovered === id ? ' is-active' : ''}`}
-                onMouseEnter={() => setHovered(id)}
-                onMouseLeave={() => setHovered(null)}
-                onClick={() => handleModeClick(id)}
-              >
-                <div className="mode-btn-icon"><ModeIcon mode={id} /></div>
-                <span className="mode-btn-label">{label}</span>
-                <span className="mode-btn-sub">{sub}</span>
-              </button>
-            ))}
-          </div>
-        )}
+        </div>
       </section>
 
       <section className="scope-section">
