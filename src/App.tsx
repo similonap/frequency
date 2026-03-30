@@ -303,18 +303,26 @@ const LISTEN_STEPS = [
   { label: 'combined' },
 ] as const
 
-function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void }) {
+function GameScreen({ isDark, onBack, freqCount }: { isDark: boolean; onBack: () => void; freqCount: 1 | 2 }) {
   const [phase,       setPhase]      = useState<GamePhase>('listen')
-  const [targetFreqs, setTargetFreqs] = useState<[number, number]>(randomTwoFreqs)
+  const [targetFreqs, setTargetFreqs] = useState<[number, number]>(() =>
+    freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs()
+  )
   const [guessFreqs,  setGuessFreqs]  = useState<[number, number]>([220, 440])
   const [listenStep,  setListenStep]  = useState<0 | 1 | 2>(0)
   const audio = useAudio()
 
   useEffect(() => () => { audio.stop() }, [])
 
-  // Listen phase: freq1 (2s) → freq2 (2s) → combined (2s) → guess
+  // Listen phase
   useEffect(() => {
     if (phase !== 'listen') return
+    if (freqCount === 1) {
+      audio.play([targetFreqs[0]])
+      const t = setTimeout(() => { audio.stop(); setPhase('guess') }, 4000)
+      return () => { clearTimeout(t); audio.stop() }
+    }
+    // Multi: freq1 (2s) → freq2 (2s) → combined (4s) → guess
     setListenStep(0)
     audio.play([targetFreqs[0]])
     const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 2000)
@@ -323,10 +331,10 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
   }, [phase, targetFreqs])
 
-  // Guess phase: play both guess tones
+  // Guess phase
   useEffect(() => {
     if (phase !== 'guess') return
-    audio.play(guessFreqs)
+    audio.play(freqCount === 1 ? [guessFreqs[0]] : guessFreqs)
     return () => audio.stop()
   }, [phase])
 
@@ -335,20 +343,25 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
     const next = [guessFreqs[0], guessFreqs[1]] as [number, number]
     next[idx]  = f
     setGuessFreqs(next)
-    audio.setFreqs(next)
+    audio.setFreqs(freqCount === 1 ? [next[0]] : next)
   }
 
   const submit = () => { audio.stop(); setPhase('result') }
 
   const playAgain = () => {
-    setTargetFreqs(randomTwoFreqs())
+    setTargetFreqs(freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs())
     setGuessFreqs([220, 440])
     setPhase('listen')
   }
 
-  const { total, pairs } = calcDualScore(targetFreqs, guessFreqs)
+  const singleScore = calcScore(targetFreqs[0], guessFreqs[0])
+  const { total, pairs } = freqCount === 1
+    ? { total: singleScore, pairs: [[targetFreqs[0], guessFreqs[0]], [0, 0]] as const }
+    : calcDualScore(targetFreqs, guessFreqs)
   // Sort pairs low→high by target freq so result always reads consistently
-  const sortedPairs = [...pairs].sort((a, b) => a[0] - b[0]) as typeof pairs
+  const sortedPairs = freqCount === 2
+    ? ([...pairs].sort((a, b) => a[0] - b[0]) as typeof pairs)
+    : pairs
 
   return (
     <div className="game-screen">
@@ -357,16 +370,18 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
       {phase === 'listen' && (
         <div className="phase-listen">
           <p className="phase-label">listen carefully</p>
-          <div className="listen-steps">
-            {LISTEN_STEPS.map((s, i) => (
-              <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>
-                {s.label}
-              </span>
-            ))}
-          </div>
+          {freqCount === 2 && (
+            <div className="listen-steps">
+              {LISTEN_STEPS.map((s, i) => (
+                <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>
+                  {s.label}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="game-canvas-wrap">
             <FreqCanvas
-              freqs={listenStep === 0 ? [targetFreqs[0]] : listenStep === 1 ? [targetFreqs[1]] : targetFreqs}
+              freqs={freqCount === 1 ? [targetFreqs[0]] : listenStep === 0 ? [targetFreqs[0]] : listenStep === 1 ? [targetFreqs[1]] : targetFreqs}
               isDark={isDark}
             />
           </div>
@@ -375,12 +390,12 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
 
       {phase === 'guess' && (
         <div className="phase-guess">
-          <p className="phase-label">match both frequencies</p>
+          <p className="phase-label">{freqCount === 1 ? 'match the frequency' : 'match both frequencies'}</p>
           <div className="game-canvas-wrap">
-            <FreqCanvas freqs={guessFreqs} isDark={isDark} />
+            <FreqCanvas freqs={freqCount === 1 ? [guessFreqs[0]] : guessFreqs} isDark={isDark} />
           </div>
           <div className="slider-section">
-            {([0, 1] as const).map(i => (
+            {(freqCount === 1 ? [0] as const : [0, 1] as const).map(i => (
               <div key={i} className="slider-row">
                 <div className="freq-display">
                   <span className="freq-hz">{guessFreqs[i]} Hz</span>
@@ -417,12 +432,14 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
                 <span className="result-tag">original</span>
                 <span className="result-freq">
                   {targetFreqs[0]} Hz · {freqToNote(targetFreqs[0])}
-                  <span className="result-sep">+</span>
-                  {targetFreqs[1]} Hz · {freqToNote(targetFreqs[1])}
+                  {freqCount === 2 && <>
+                    <span className="result-sep">+</span>
+                    {targetFreqs[1]} Hz · {freqToNote(targetFreqs[1])}
+                  </>}
                 </span>
               </div>
               <div className="game-canvas-wrap">
-                <FreqCanvas freqs={targetFreqs} isDark={isDark} />
+                <FreqCanvas freqs={freqCount === 1 ? [targetFreqs[0]] : targetFreqs} isDark={isDark} />
               </div>
             </div>
 
@@ -436,15 +453,17 @@ function GameScreen({ isDark, onBack }: { isDark: boolean; onBack: () => void })
                   <span className={`result-score-pill ${calcScore(sortedPairs[0][0], sortedPairs[0][1]) >= 85 ? 'good' : ''}`}>
                     {calcScore(sortedPairs[0][0], sortedPairs[0][1])}%
                   </span>
-                  <span className="result-sep">+</span>
-                  {sortedPairs[1][1]} Hz · {freqToNote(sortedPairs[1][1])}
-                  <span className={`result-score-pill ${calcScore(sortedPairs[1][0], sortedPairs[1][1]) >= 85 ? 'good' : ''}`}>
-                    {calcScore(sortedPairs[1][0], sortedPairs[1][1])}%
-                  </span>
+                  {freqCount === 2 && <>
+                    <span className="result-sep">+</span>
+                    {sortedPairs[1][1]} Hz · {freqToNote(sortedPairs[1][1])}
+                    <span className={`result-score-pill ${calcScore(sortedPairs[1][0], sortedPairs[1][1]) >= 85 ? 'good' : ''}`}>
+                      {calcScore(sortedPairs[1][0], sortedPairs[1][1])}%
+                    </span>
+                  </>}
                 </span>
               </div>
               <div className="game-canvas-wrap">
-                <FreqCanvas freqs={guessFreqs} isDark={isDark} />
+                <FreqCanvas freqs={freqCount === 1 ? [guessFreqs[0]] : guessFreqs} isDark={isDark} />
               </div>
             </div>
           </div>
@@ -503,14 +522,44 @@ const MODE_META: { id: Mode; label: string; sub: string }[] = [
 
 // ── App ───────────────────────────────────────────────────────
 
+const PRACTICE_SUBS = [
+  { count: 1 as const, label: 'Single', sub: 'one frequency',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12 Q6 4 12 12 Q18 20 22 12" />
+      </svg>
+    )
+  },
+  { count: 2 as const, label: 'Multi', sub: 'two frequencies',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 9 Q5 3 9 9 Q13 15 16 9 Q19 3 22 9" />
+        <path d="M2 15 Q5 9 9 15 Q13 21 16 15 Q19 9 22 15" strokeOpacity="0.5" />
+      </svg>
+    )
+  },
+]
+
 function App() {
-  const [hovered,  setHovered]  = useState<Mode | null>(null)
-  const [launched, setLaunched] = useState<Mode | null>(null)
-  const [isDark,   setIsDark]   = useState(true)
+  const [hovered,          setHovered]          = useState<Mode | null>(null)
+  const [launched,         setLaunched]         = useState<Mode | null>(null)
+  const [practiceExpanded, setPracticeExpanded] = useState(false)
+  const [freqCount,        setFreqCount]        = useState<1 | 2>(1)
+  const [isDark,           setIsDark]           = useState(true)
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
   }, [isDark])
+
+  const handleModeClick = (id: Mode) => {
+    if (id === 'single') { setPracticeExpanded(true) }
+    else { setLaunched(id) }
+  }
+
+  const launchPractice = (count: 1 | 2) => {
+    setFreqCount(count)
+    setLaunched('single')
+  }
 
   if (launched) {
     return (
@@ -522,7 +571,7 @@ function App() {
             <span className="header-ver">v 0.1.0</span>
           </div>
         </header>
-        <GameScreen isDark={isDark} onBack={() => setLaunched(null)} />
+        <GameScreen isDark={isDark} freqCount={freqCount} onBack={() => { setLaunched(null); setPracticeExpanded(false) }} />
       </div>
     )
   }
@@ -542,21 +591,40 @@ function App() {
       </section>
 
       <section className="modes-section">
-        <div className="modes-grid">
-          {MODE_META.map(({ id, label, sub }) => (
-            <button
-              key={id}
-              className={`mode-btn${hovered === id ? ' is-active' : ''}`}
-              onMouseEnter={() => setHovered(id)}
-              onMouseLeave={() => setHovered(null)}
-              onClick={() => setLaunched(id)}
-            >
-              <div className="mode-btn-icon"><ModeIcon mode={id} /></div>
-              <span className="mode-btn-label">{label}</span>
-              <span className="mode-btn-sub">{sub}</span>
-            </button>
-          ))}
-        </div>
+        {practiceExpanded ? (
+          <div className="sub-modes">
+            <button className="sub-back" onClick={() => setPracticeExpanded(false)}>← practice</button>
+            <div className="modes-grid">
+              {PRACTICE_SUBS.map(({ count, label, sub, icon }) => (
+                <button
+                  key={count}
+                  className="mode-btn"
+                  onClick={() => launchPractice(count)}
+                >
+                  <div className="mode-btn-icon">{icon}</div>
+                  <span className="mode-btn-label">{label}</span>
+                  <span className="mode-btn-sub">{sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="modes-grid">
+            {MODE_META.map(({ id, label, sub }) => (
+              <button
+                key={id}
+                className={`mode-btn${hovered === id ? ' is-active' : ''}`}
+                onMouseEnter={() => setHovered(id)}
+                onMouseLeave={() => setHovered(null)}
+                onClick={() => handleModeClick(id)}
+              >
+                <div className="mode-btn-icon"><ModeIcon mode={id} /></div>
+                <span className="mode-btn-label">{label}</span>
+                <span className="mode-btn-sub">{sub}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="scope-section">
