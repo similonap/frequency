@@ -35,12 +35,17 @@ export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProp
       return () => { clearTimeout(t); audio.stop() }
     }
     // Multi: freq1 (2s) → freq2 (2s) → combined (4s) → guess
-    setListenStep(0)
-    audio.play([targetFreqs[0]])
-    const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 2000)
-    const t2 = setTimeout(() => { setListenStep(2); audio.play(targetFreqs)      }, 4000)
-    const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 8000)
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
+    setListenStep(2);
+    audio.play(targetFreqs);
+    // const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 1000)
+    // const t2 = setTimeout(() => { setListenStep(2); audio.play(targetFreqs)      }, 2000)
+    // const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 4000)
+
+    const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 5000);
+
+    return () => { clearTimeout(t3); audio.stop() }
+
+    // return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- audio methods are stable useCallback refs; freqCount is fixed for component lifetime
   }, [phase, targetFreqs])
 
