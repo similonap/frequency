@@ -1,4 +1,4 @@
-import { FREQ_MIN, FREQ_MAX, NOTE_NAMES } from '../constants'
+import { FREQ_MIN, FREQ_MAX, CHALLENGE_FREQ_MIN, CHALLENGE_FREQ_MAX, NOTE_NAMES } from '../constants'
 
 // ── Frequency / slider conversion ─────────────────────────────
 
@@ -10,8 +10,11 @@ export const freqToSlider = (f: number): number =>
 
 // ── Random frequency generation ───────────────────────────────
 
-export const randomFreq = (): number =>
-  Math.round(sliderToFreq(Math.random() * 1000) / 5) * 5
+export const randomFreq = (): number => {
+  const t = Math.random()
+  const f = Math.round(CHALLENGE_FREQ_MIN * Math.pow(CHALLENGE_FREQ_MAX / CHALLENGE_FREQ_MIN, t))
+  return Math.round(f / 5) * 5
+}
 
 export const randomTwoFreqs = (): [number, number] => {
   let f1 = randomFreq(), f2 = randomFreq()

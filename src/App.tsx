@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-import type { Mode, FreqCount } from './types'
+import type { Mode, OscPreset, FreqCount } from './types'
 import Header from './components/Header'
 import ModeSelector from './components/ModeSelector'
 import OscilloscopeCanvas from './components/OscilloscopeCanvas'
@@ -10,10 +10,14 @@ import GameScreen from './components/GameScreen'
 
 function App() {
   const [hovered,          setHovered]          = useState<Mode | null>(null)
+  const [hoveredSub,       setHoveredSub]       = useState<OscPreset | null>(null)
   const [launched,         setLaunched]         = useState<Mode | null>(null)
   const [practiceExpanded, setPracticeExpanded] = useState(false)
   const [freqCount,        setFreqCount]        = useState<FreqCount>(1)
+  const [instant,          setInstant]          = useState(false)
   const [isDark,           setIsDark]           = useState(true)
+
+  const oscPreset: OscPreset | null = practiceExpanded ? hoveredSub : hovered
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
@@ -24,8 +28,9 @@ function App() {
     else { setLaunched(id) }
   }
 
-  const launchPractice = (count: FreqCount) => {
+  const launchPractice = (count: FreqCount, inst: boolean) => {
     setFreqCount(count)
+    setInstant(inst)
     setLaunched('single')
   }
 
@@ -34,9 +39,10 @@ function App() {
       <div className="game-view">
         <Header isDark={isDark} onToggleTheme={() => setIsDark(d => !d)} />
         <GameScreen
-          key={`${launched}-${freqCount}`}
+          key={`${launched}-${freqCount}-${instant}`}
           isDark={isDark}
           freqCount={freqCount}
+          instant={instant}
           onBack={() => { setLaunched(null); setPracticeExpanded(false) }}
         />
       </div>
@@ -53,13 +59,14 @@ function App() {
         hovered={hovered}
         practiceExpanded={practiceExpanded}
         onHover={setHovered}
+        onSubHover={setHoveredSub}
         onModeClick={handleModeClick}
         onPracticeBack={() => setPracticeExpanded(false)}
         onLaunchPractice={launchPractice}
       />
       <section className="scope-section">
         <div className="scope-frame">
-          <OscilloscopeCanvas mode={hovered} isDark={isDark} />
+          <OscilloscopeCanvas preset={oscPreset} isDark={isDark} />
         </div>
       </section>
     </div>

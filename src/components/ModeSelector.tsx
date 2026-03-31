@@ -1,23 +1,31 @@
 import React from 'react'
 import './ModeSelector.css'
 import { MODE_META, PRACTICE_SUBS } from '../constants'
-import type { Mode, FreqCount } from '../types'
+import type { Mode, OscPreset, FreqCount } from '../types'
 
 // ── Practice sub-mode icons ───────────────────────────────────
 
-const PRACTICE_ICONS: Record<FreqCount, React.ReactNode> = {
-  1: (
+const PRACTICE_ICONS: React.ReactNode[] = [
+  // Single
+  (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12 Q6 4 12 12 Q18 20 22 12" />
+      <path d="M2 12 Q5 6 9 12 Q13 18 16 12 Q19 6 22 12" />
     </svg>
   ),
-  2: (
+  // Multi (step by step)
+  (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 9 Q5 3 9 9 Q13 15 16 9 Q19 3 22 9" />
       <path d="M2 15 Q5 9 9 15 Q13 21 16 15 Q19 9 22 15" strokeOpacity="0.5" />
     </svg>
   ),
-}
+  // One-Shot (beat frequency — amplitude envelope of two freqs summed)
+  (
+    <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12 Q4 4 6 12 Q8 20 10 12 Q11 9 12 12 Q13 15 14 12 Q16 4 18 12 Q20 20 22 12" />
+    </svg>
+  ),
+]
 
 // ── Mode icon (per-mode SVG) ──────────────────────────────────
 
@@ -43,15 +51,17 @@ interface ModeSelectorProps {
   hovered: Mode | null
   practiceExpanded: boolean
   onHover: (mode: Mode | null) => void
+  onSubHover: (preset: OscPreset | null) => void
   onModeClick: (mode: Mode) => void
   onPracticeBack: () => void
-  onLaunchPractice: (count: FreqCount) => void
+  onLaunchPractice: (count: FreqCount, instant: boolean) => void
 }
 
 export default function ModeSelector({
   hovered,
   practiceExpanded,
   onHover,
+  onSubHover,
   onModeClick,
   onPracticeBack,
   onLaunchPractice,
@@ -92,14 +102,16 @@ export default function ModeSelector({
               >← back</button>
             </div>
             <div className="modes-grid">
-              {PRACTICE_SUBS.map(({ count, label, sub }) => (
+              {PRACTICE_SUBS.map(({ count, instant, label, sub, preset }, i) => (
                 <button
-                  key={count}
+                  key={`${count}-${instant}`}
                   className="mode-btn"
-                  onClick={() => onLaunchPractice(count)}
+                  onClick={() => onLaunchPractice(count, instant)}
+                  onMouseEnter={() => onSubHover(preset)}
+                  onMouseLeave={() => onSubHover(null)}
                   tabIndex={practiceExpanded ? 0 : -1}
                 >
-                  <div className="mode-btn-icon">{PRACTICE_ICONS[count]}</div>
+                  <div className="mode-btn-icon">{PRACTICE_ICONS[i]}</div>
                   <span className="mode-btn-label">{label}</span>
                   <span className="mode-btn-sub">{sub}</span>
                 </button>

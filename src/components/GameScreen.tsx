@@ -13,18 +13,19 @@ interface GameScreenProps {
   isDark: boolean
   onBack: () => void
   freqCount: FreqCount
+  instant?: boolean
 }
 
-export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProps) {
+export default function GameScreen({ isDark, onBack, freqCount, instant = false }: GameScreenProps) {
   const [phase,        setPhase]       = useState<GamePhase>('listen')
   const [targetFreqs,  setTargetFreqs] = useState<[number, number]>(() =>
     freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs()
   )
-  const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([220, 440])
+  const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([FREQ_MIN, FREQ_MIN])
   const [listenStep,   setListenStep]  = useState<0 | 1 | 2>(0)
   const audio = useAudio()
 
-  useEffect(() => () => { audio.cleanup() }, [audio.cleanup])
+  useEffect(() => () => { audio.stop() }, [])
 
   // Listen phase
   useEffect(() => {
@@ -34,19 +35,20 @@ export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProp
       const t = setTimeout(() => { audio.stop(); setPhase('guess') }, 4000)
       return () => { clearTimeout(t); audio.stop() }
     }
+    if (instant) {
+      // Multi Instant: play both together immediately, then guess
+      setListenStep(2)
+      audio.play(targetFreqs)
+      const t = setTimeout(() => { audio.stop(); setPhase('guess') }, 4000)
+      return () => { clearTimeout(t); audio.stop() }
+    }
     // Multi: freq1 (2s) → freq2 (2s) → combined (4s) → guess
-    setListenStep(2);
-    audio.play(targetFreqs);
-    // const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 1000)
-    // const t2 = setTimeout(() => { setListenStep(2); audio.play(targetFreqs)      }, 2000)
-    // const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 4000)
-
-    const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 5000);
-
-    return () => { clearTimeout(t3); audio.stop() }
-
-    // return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- audio methods are stable useCallback refs; freqCount is fixed for component lifetime
+    setListenStep(0)
+    audio.play([targetFreqs[0]])
+    const t1 = setTimeout(() => { setListenStep(1); audio.play([targetFreqs[1]]) }, 2000)
+    const t2 = setTimeout(() => { setListenStep(2); audio.play(targetFreqs)      }, 4000)
+    const t3 = setTimeout(() => { audio.stop(); setPhase('guess')                }, 8000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); audio.stop() }
   }, [phase, targetFreqs])
 
   // Guess phase
@@ -54,7 +56,6 @@ export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProp
     if (phase !== 'guess') return
     audio.play(freqCount === 1 ? [guessFreqs[0]] : guessFreqs)
     return () => audio.stop()
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- audio.play is stable; guessFreqs must NOT trigger re-play (slider uses audio.setFreqs directly)
   }, [phase])
 
   const handleSlider = (idx: 0 | 1, v: number) => {
@@ -69,7 +70,7 @@ export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProp
 
   const playAgain = () => {
     setTargetFreqs(freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs())
-    setGuessFreqs([220, 440])
+    setGuessFreqs([FREQ_MIN, FREQ_MIN])
     setPhase('listen')
   }
 
@@ -89,7 +90,7 @@ export default function GameScreen({ isDark, onBack, freqCount }: GameScreenProp
       {phase === 'listen' && (
         <div className="phase-listen">
           <p className="phase-label">listen carefully</p>
-          {freqCount === 2 && (
+          {freqCount === 2 && !instant && (
             <div className="listen-steps">
               {LISTEN_STEPS.map((s, i) => (
                 <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>

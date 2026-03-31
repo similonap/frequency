@@ -1,25 +1,25 @@
 import { useEffect, useRef } from 'react'
 import './OscilloscopeCanvas.css'
-import { COMPS, TARGETS, THEME_COLORS } from '../constants'
-import type { Mode } from '../types'
+import { COMPS, TARGETS, THEME_COLORS, PRESET_SPEED } from '../constants'
+import type { OscPreset } from '../types'
 
 // ── Main screen oscilloscope ───────────────────────────────────
 
 interface OscilloscopeCanvasProps {
-  mode: Mode | null
+  preset: OscPreset | null
   isDark: boolean
 }
 
-export default function OscilloscopeCanvas({ mode, isDark }: OscilloscopeCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const animRef   = useRef<number>(0)
-  const timeRef   = useRef(0)
-  const modeRef   = useRef(mode)
-  const isDarkRef = useRef(isDark)
-  const ampsRef   = useRef([0.24, 0, 0, 0, 0, 0, 0])
+export default function OscilloscopeCanvas({ preset, isDark }: OscilloscopeCanvasProps) {
+  const canvasRef  = useRef<HTMLCanvasElement>(null)
+  const animRef    = useRef<number>(0)
+  const timeRef    = useRef(0)
+  const presetRef  = useRef(preset)
+  const isDarkRef  = useRef(isDark)
+  const ampsRef    = useRef([0.24, 0, 0, 0, 0, 0, 0])
 
-  useEffect(() => { modeRef.current  = mode   }, [mode])
-  useEffect(() => { isDarkRef.current = isDark }, [isDark])
+  useEffect(() => { presetRef.current  = preset  }, [preset])
+  useEffect(() => { isDarkRef.current  = isDark  }, [isDark])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -43,7 +43,7 @@ export default function OscilloscopeCanvas({ mode, isDark }: OscilloscopeCanvasP
       const amps = ampsRef.current
       const colors = THEME_COLORS[isDarkRef.current ? 'dark' : 'light']
 
-      const tgt = TARGETS[modeRef.current ?? 'default']
+      const tgt = TARGETS[presetRef.current ?? 'default']
       for (let i = 0; i < amps.length; i++) amps[i] += (tgt[i] - amps[i]) * 0.05
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -89,7 +89,7 @@ export default function OscilloscopeCanvas({ mode, isDark }: OscilloscopeCanvasP
       drawComposite(0.50, isDarkRef.current ? 10 : 4,    0)
       drawComposite(1.0,  isDarkRef.current ? 22 : 8,    0)
 
-      timeRef.current += 0.016
+      timeRef.current += 0.016 * (PRESET_SPEED[presetRef.current ?? ''] ?? 1)
       animRef.current = requestAnimationFrame(draw)
     }
     draw()

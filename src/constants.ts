@@ -1,9 +1,14 @@
 import type { Mode, FreqCount } from './types'
 
-// ── Frequency range ───────────────────────────────────────────
+// ── Frequency range (slider bounds) ──────────────────────────
 
-export const FREQ_MIN = 110
-export const FREQ_MAX = 880
+export const FREQ_MIN = 60
+export const FREQ_MAX = 2440
+
+// ── Challenge frequency range (what gets picked as the target) ─
+
+export const CHALLENGE_FREQ_MIN = 400
+export const CHALLENGE_FREQ_MAX = 1440
 
 // ── Oscilloscope waveform components ─────────────────────────
 
@@ -18,9 +23,17 @@ export const COMPS = [
 ]
 
 export const TARGETS: Record<string, number[]> = {
-  default: [0.24, 0,    0,    0,    0,    0,    0   ],
-  single:  [0.34, 0,    0,    0,    0,    0,    0   ],
-  world:   [0.11, 0.09, 0.08, 0.08, 0.07, 0.05, 0.04],
+  default:     [0.24, 0,    0,    0,    0,    0,    0   ],
+  single:      [0.34, 0,    0,    0,    0,    0,    0   ],
+  world:       [0.11, 0.09, 0.08, 0.08, 0.07, 0.05, 0.04],
+  // practice sub-mode previews
+  'sub-single':  [0.44, 0,    0,    0,    0,    0,    0   ],
+  'sub-multi':   [0.30, 0,    0.26, 0,    0,    0,    0   ],
+  'sub-oneshot': [0.38, 0.34, 0,    0,    0,    0,    0   ],
+}
+
+export const PRESET_SPEED: Record<string, number> = {
+  'sub-oneshot': 2.0,
 }
 
 // ── Theme-dependent canvas colors ─────────────────────────────
@@ -59,7 +72,8 @@ export const MODE_META: { id: Mode; label: string; sub: string }[] = [
 
 // ── Practice sub-mode data (icons rendered in ModeSelector) ──
 
-export const PRACTICE_SUBS: { count: FreqCount; label: string; sub: string }[] = [
-  { count: 1, label: 'Single', sub: 'one frequency'  },
-  { count: 2, label: 'Multi',  sub: 'two frequencies' },
+export const PRACTICE_SUBS: { count: FreqCount; instant: boolean; label: string; sub: string; preset: 'sub-single' | 'sub-multi' | 'sub-oneshot' }[] = [
+  { count: 1, instant: false, label: 'Single',   sub: 'one frequency',    preset: 'sub-single'  },
+  { count: 2, instant: false, label: 'Multi',    sub: 'two frequencies',  preset: 'sub-multi'   },
+  { count: 2, instant: true,  label: 'One-Shot', sub: 'hear both at once', preset: 'sub-oneshot' },
 ]
