@@ -1,13 +1,13 @@
-import { CHALLENGE_FREQ_MIN, CHALLENGE_FREQ_MAX } from '../constants'
+// import { CHALLENGE_FREQ_MIN, CHALLENGE_FREQ_MAX } from '../constants'
 
 // ── ERB-rate scale ─────────────────────────────────────────────
 // ERB-rate(f) = 21.4 * log10(1 + 0.00437 * f)
 // Models the cochlea's frequency resolution: auditory filters are
 // wider at low frequencies, so the same Hz error is less perceptible there.
 
-const erbRate = (f: number): number => 21.4 * Math.log10(1 + 0.00437 * f)
+// const erbRate = (f: number): number => 21.4 * Math.log10(1 + 0.00437 * f)
 
-const ERB_RANGE = erbRate(CHALLENGE_FREQ_MAX) - erbRate(CHALLENGE_FREQ_MIN)
+// const ERB_RANGE = erbRate(CHALLENGE_FREQ_MAX) - erbRate(CHALLENGE_FREQ_MIN)
 
 // ── Score calculation (0–10) ───────────────────────────────────
 // dist = |ERB(target) - ERB(guess)| / ERB_RANGE
