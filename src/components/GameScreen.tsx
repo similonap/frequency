@@ -131,7 +131,7 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
                 <input
                   type="range"
                   className="freq-slider"
-                  min={0} max={1000}
+                  min={0} max={10000}
                   value={freqToSlider(guessFreqs[i])}
                   onChange={e => handleSlider(i, Number(e.target.value))}
                 />

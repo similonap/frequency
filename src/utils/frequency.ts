@@ -2,11 +2,13 @@ import { FREQ_MIN, FREQ_MAX, CHALLENGE_FREQ_MIN, CHALLENGE_FREQ_MAX, NOTE_NAMES 
 
 // ── Frequency / slider conversion ─────────────────────────────
 
+const SLIDER_STEPS = 10000
+
 export const sliderToFreq = (v: number): number =>
-  Math.round(FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, v / 1000))
+  Math.round(FREQ_MIN * Math.pow(FREQ_MAX / FREQ_MIN, v / SLIDER_STEPS))
 
 export const freqToSlider = (f: number): number =>
-  Math.round(1000 * Math.log(f / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN))
+  Math.round(SLIDER_STEPS * Math.log(f / FREQ_MIN) / Math.log(FREQ_MAX / FREQ_MIN))
 
 // ── Random frequency generation ───────────────────────────────
 
