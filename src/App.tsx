@@ -42,9 +42,9 @@ function App() {
     setLaunched('world')
   }
 
-  const dailyFreqs: [number, number] | null =
-    launched === 'world' && daily.single != null && daily.multi != null
-      ? (freqCount === 1 ? [daily.single, 0] : (oneshot ? daily.multi : daily.oneshot))
+  const dailyBundle =
+    launched === 'world' && daily.single != null && daily.multi != null && daily.oneshot != null
+      ? { single: daily.single, multi: daily.multi, oneshot: daily.oneshot }
       : null
 
 
@@ -57,7 +57,7 @@ function App() {
           isDark={isDark}
           freqCount={freqCount}
           oneshot={oneshot}
-          dailyFreqs={dailyFreqs}
+          daily={dailyBundle}
           onBack={() => { setLaunched(null); setExpanded(null) }}
         />
       </div>

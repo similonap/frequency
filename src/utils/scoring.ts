@@ -22,7 +22,6 @@ export const calcScore = (target: number, guess: number): number => {
 //   return Math.max(0, Math.min(10, Math.max(sharp, gentle)))
 
     let score = (1 - Math.min(1, Math.abs(target - guess) / 20)) * 10;
-    console.log(score);
     return score;
 }
 

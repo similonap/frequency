@@ -9,15 +9,28 @@ import type { GamePhase, FreqCount } from '../types'
 
 // ── Game Screen ───────────────────────────────────────────────
 
+interface DailyBundle {
+  single: number
+  multi:  [number, number]
+  oneshot: [number, number]
+}
+
 interface GameScreenProps {
   isDark: boolean
   onBack: () => void
   freqCount: FreqCount
   oneshot?: boolean
-  dailyFreqs?: [number, number] | null
+  daily?: DailyBundle | null
 }
 
-export default function GameScreen({ isDark, onBack, freqCount, oneshot = false, dailyFreqs = null }: GameScreenProps) {
+function pickDailyFreqs(daily: DailyBundle | null | undefined, freqCount: FreqCount, oneshot: boolean): [number, number] | null {
+  if (!daily) return null
+  if (freqCount === 1) return [daily.single, 0]
+  return oneshot ? daily.oneshot : daily.multi
+}
+
+export default function GameScreen({ isDark, onBack, freqCount, oneshot = false, daily = null }: GameScreenProps) {
+  const dailyFreqs = pickDailyFreqs(daily, freqCount, oneshot)
   const [phase,        setPhase]       = useState<GamePhase>('listen')
   const [targetFreqs,  setTargetFreqs] = useState<[number, number]>(() =>
     dailyFreqs != null ? dailyFreqs
@@ -94,10 +107,12 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
     <div className="game-screen">
       <button className="back-btn" onClick={onBack}>← back</button>
 
-      {phase === 'listen' && (
-        <div className="phase-listen">
-          <p className="phase-label">listen carefully</p>
-          {freqCount === 2 && !oneshot && (
+      {(phase === 'listen' || phase === 'guess') && (
+        <div className={phase === 'listen' ? 'phase-listen' : 'phase-guess'}>
+          <p className="phase-label">
+            {phase === 'listen' ? 'listen carefully' : freqCount === 1 ? 'match the frequency' : 'match both frequencies'}
+          </p>
+          {phase === 'listen' && freqCount === 2 && !oneshot && (
             <div className="listen-steps">
               {LISTEN_STEPS.map((s, i) => (
                 <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>
@@ -108,41 +123,36 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
           )}
           <div className="game-canvas-wrap">
             <FreqCanvas
-              freqs={freqCount === 1 ? [targetFreqs[0]] : listenStep === 0 ? [targetFreqs[0]] : listenStep === 1 ? [targetFreqs[1]] : targetFreqs}
+              freqs={phase === 'listen'
+                ? (freqCount === 1 ? [targetFreqs[0]] : listenStep === 0 ? [targetFreqs[0]] : listenStep === 1 ? [targetFreqs[1]] : targetFreqs)
+                : (freqCount === 1 ? [guessFreqs[0]] : guessFreqs)}
               isDark={isDark}
             />
           </div>
-        </div>
-      )}
-
-      {phase === 'guess' && (
-        <div className="phase-guess">
-          <p className="phase-label">{freqCount === 1 ? 'match the frequency' : 'match both frequencies'}</p>
-          <div className="game-canvas-wrap">
-            <FreqCanvas freqs={freqCount === 1 ? [guessFreqs[0]] : guessFreqs} isDark={isDark} />
-          </div>
-          <div className="slider-section">
-            {(freqCount === 1 ? [0] as const : [0, 1] as const).map(i => (
-              <div key={i} className="slider-row">
-                <div className="freq-display">
-                  <span className="freq-hz">{guessFreqs[i]} Hz</span>
-                  <span className="freq-note">{freqToNote(guessFreqs[i])}</span>
+          <div style={phase === 'listen' ? { visibility: 'hidden', pointerEvents: 'none' } : undefined}>
+            <div className="slider-section">
+              {(freqCount === 1 ? [0] as const : [0, 1] as const).map(i => (
+                <div key={i} className="slider-row">
+                  <div className="freq-display">
+                    <span className="freq-hz">{guessFreqs[i]} Hz</span>
+                    <span className="freq-note">{freqToNote(guessFreqs[i])}</span>
+                  </div>
+                  <input
+                    type="range"
+                    className="freq-slider"
+                    min={0} max={10000}
+                    value={freqToSlider(guessFreqs[i])}
+                    onChange={e => handleSlider(i, Number(e.target.value))}
+                  />
                 </div>
-                <input
-                  type="range"
-                  className="freq-slider"
-                  min={0} max={10000}
-                  value={freqToSlider(guessFreqs[i])}
-                  onChange={e => handleSlider(i, Number(e.target.value))}
-                />
+              ))}
+              <div className="slider-ends">
+                <span>{FREQ_MIN} Hz</span>
+                <span>{FREQ_MAX} Hz</span>
               </div>
-            ))}
-            <div className="slider-ends">
-              <span>{FREQ_MIN} Hz</span>
-              <span>{FREQ_MAX} Hz</span>
             </div>
+            <button className="submit-btn" onClick={submit}>submit →</button>
           </div>
-          <button className="submit-btn" onClick={submit}>submit →</button>
         </div>
       )}
 
