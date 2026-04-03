@@ -16,10 +16,14 @@ const ERB_RANGE = erbRate(CHALLENGE_FREQ_MAX) - erbRate(CHALLENGE_FREQ_MIN)
 // score = max(sharp, gentle), clamped 0–10
 
 export const calcScore = (target: number, guess: number): number => {
-  const dist  = Math.abs(erbRate(target) - erbRate(guess)) / ERB_RANGE
-  const sharp  = 10 * Math.exp(-dist * dist * 3250)
-  const gentle = 3  * Math.exp(-dist * dist * 130)
-  return Math.max(0, Math.min(10, Math.max(sharp, gentle)))
+//   const dist  = Math.abs(erbRate(target) - erbRate(guess)) / ERB_RANGE
+//   const sharp  = 10 * Math.exp(-dist * dist * 3250)
+//   const gentle = 3  * Math.exp(-dist * dist * 130)
+//   return Math.max(0, Math.min(10, Math.max(sharp, gentle)))
+
+    let score = (1 - Math.min(1, Math.abs(target - guess) / 20)) * 10;
+    console.log(score);
+    return score;
 }
 
 // ── Score tier (for color coding) ─────────────────────────────
