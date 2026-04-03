@@ -26,16 +26,16 @@
 [data-theme="light"] {
   --bg:            #f0ede6;
   --bg-scope:      #eceae3;
-  --green:         #007a38;
-  --green-dim:     rgba(0, 122, 56, 0.45);
-  --green-faint:   rgba(0, 122, 56, 0.10);
+  --green:         #3d5ca8;
+  --green-dim:     rgba(61, 92, 168, 0.45);
+  --green-faint:   rgba(61, 92, 168, 0.08);
   --text:          rgba(10, 15, 30, 0.88);
   --text-dim:      rgba(10, 15, 30, 0.45);
   --text-faint:    rgba(10, 15, 30, 0.22);
   --border:        rgba(0, 0, 0, 0.10);
-  --border-active: rgba(0, 122, 56, 0.40);
+  --border-active: rgba(61, 92, 168, 0.35);
   --card-bg:       rgba(0, 0, 0, 0.02);
-  --card-hover:    rgba(0, 122, 56, 0.04);
+  --card-hover:    rgba(61, 92, 168, 0.05);
   color-scheme: light;
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import './GameScreen.css'
 import { useAudio } from '../hooks/useAudio'
 import { sliderToFreq, freqToSlider, freqToNote, randomFreq, randomTwoFreqs } from '../utils/frequency'
-import { calcScore, calcDualScore, scoreLabel } from '../utils/scoring'
+import { calcScore, calcDualScore, scoreLabel, scoreTier } from '../utils/scoring'
 import { FREQ_MIN, FREQ_MAX, LISTEN_STEPS } from '../constants'
 import FreqCanvas from './FreqCanvas'
 import type { GamePhase, FreqCount } from '../types'
@@ -14,12 +14,15 @@ interface GameScreenProps {
   onBack: () => void
   freqCount: FreqCount
   instant?: boolean
+  dailyFreq?: number | null
 }
 
-export default function GameScreen({ isDark, onBack, freqCount, instant = false }: GameScreenProps) {
+export default function GameScreen({ isDark, onBack, freqCount, instant = false, dailyFreq = null }: GameScreenProps) {
   const [phase,        setPhase]       = useState<GamePhase>('listen')
   const [targetFreqs,  setTargetFreqs] = useState<[number, number]>(() =>
-    freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs()
+    dailyFreq != null ? [dailyFreq, 0] as [number, number]
+    : freqCount === 1 ? [randomFreq(), 0] as [number, number]
+    : randomTwoFreqs()
   )
   const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([FREQ_MIN, FREQ_MIN])
   const [listenStep,   setListenStep]  = useState<0 | 1 | 2>(0)
@@ -69,7 +72,11 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false 
   const submit = () => { audio.stop(); setPhase('result') }
 
   const playAgain = () => {
-    setTargetFreqs(freqCount === 1 ? [randomFreq(), 0] as [number, number] : randomTwoFreqs())
+    setTargetFreqs(
+      dailyFreq != null ? [dailyFreq, 0] as [number, number]
+      : freqCount === 1  ? [randomFreq(), 0] as [number, number]
+      : randomTwoFreqs()
+    )
     setGuessFreqs([FREQ_MIN, FREQ_MIN])
     setPhase('listen')
   }
@@ -142,8 +149,8 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false 
       {phase === 'result' && (
         <div className="phase-result">
           <div className="score-block">
-            <span className="score-num">{total}%</span>
-            <span className="score-label">{scoreLabel(total)}</span>
+            <span className={`score-num score-tier-${scoreTier(total)}`}>{total.toFixed(1)}</span>
+            <span className={`score-label score-tier-${scoreTier(total)}`}>{scoreLabel(total)}</span>
           </div>
 
           <div className="result-waves">
@@ -170,14 +177,14 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false 
                 <span className="result-tag">your answer</span>
                 <span className="result-freq">
                   {sortedPairs[0][1]} Hz · {freqToNote(sortedPairs[0][1])}
-                  <span className={`result-score-pill ${calcScore(sortedPairs[0][0], sortedPairs[0][1]) >= 85 ? 'good' : ''}`}>
-                    {calcScore(sortedPairs[0][0], sortedPairs[0][1])}%
+                  <span className={`result-score-pill score-tier-${scoreTier(calcScore(sortedPairs[0][0], sortedPairs[0][1]))}`}>
+                    {calcScore(sortedPairs[0][0], sortedPairs[0][1]).toFixed(1)}
                   </span>
                   {freqCount === 2 && <>
                     <span className="result-sep">+</span>
                     {sortedPairs[1][1]} Hz · {freqToNote(sortedPairs[1][1])}
-                    <span className={`result-score-pill ${calcScore(sortedPairs[1][0], sortedPairs[1][1]) >= 85 ? 'good' : ''}`}>
-                      {calcScore(sortedPairs[1][0], sortedPairs[1][1])}%
+                    <span className={`result-score-pill score-tier-${scoreTier(calcScore(sortedPairs[1][0], sortedPairs[1][1]))}`}>
+                      {calcScore(sortedPairs[1][0], sortedPairs[1][1]).toFixed(1)}
                     </span>
                   </>}
                 </span>

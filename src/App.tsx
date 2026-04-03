@@ -5,6 +5,7 @@ import Header from './components/Header'
 import ModeSelector from './components/ModeSelector'
 import OscilloscopeCanvas from './components/OscilloscopeCanvas'
 import GameScreen from './components/GameScreen'
+import { useDailyFreq } from './hooks/useDailyFreq'
 
 // ── App ───────────────────────────────────────────────────────
 
@@ -16,6 +17,7 @@ function App() {
   const [freqCount,        setFreqCount]        = useState<FreqCount>(1)
   const [instant,          setInstant]          = useState(false)
   const [isDark,           setIsDark]           = useState(true)
+  const daily = useDailyFreq()
 
   const oscPreset: OscPreset | null = practiceExpanded ? hoveredSub : hovered
 
@@ -43,6 +45,7 @@ function App() {
           isDark={isDark}
           freqCount={freqCount}
           instant={instant}
+          dailyFreq={launched === 'world' ? daily.freq : null}
           onBack={() => { setLaunched(null); setPracticeExpanded(false) }}
         />
       </div>

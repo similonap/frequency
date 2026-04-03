@@ -45,9 +45,9 @@ export const THEME_COLORS = {
     bgStroke: 'rgba(0,255,136,0.18)',
   },
   light: {
-    stroke: (a: number) => `rgba(0,122,56,${a})`,
-    shadow: '#007a38',
-    bgStroke: 'rgba(0,100,50,0.20)',
+    stroke: (a: number) => `rgba(20,20,20,${a})`,
+    shadow: '#1a1a1a',
+    bgStroke: 'rgba(20,20,20,0.12)',
   },
 } as const
 

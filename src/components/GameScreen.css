@@ -116,7 +116,7 @@
 }
 
 [data-theme="light"] .freq-slider::-webkit-slider-thumb {
-  box-shadow: 0 0 6px rgba(0,122,56,0.4);
+  box-shadow: 0 0 6px rgba(61,92,168,0.4);
 }
 
 .freq-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
@@ -154,15 +154,10 @@
 .result-score-pill {
   font-size: 10px;
   letter-spacing: 0.08em;
-  color: var(--text-dim);
-  border: 1px solid var(--border);
   padding: 1px 6px;
   margin-left: 6px;
-}
-
-.result-score-pill.good {
-  color: var(--green);
-  border-color: var(--border-active);
+  border: 1px solid currentColor;
+  opacity: 0.75;
 }
 
 .submit-btn {
@@ -249,3 +244,14 @@
   flex-shrink: 0;
   margin: clamp(6px, 1.5vh, 14px) 0;
 }
+
+/* ─── Score tier colors ───────────────────────────────────────── */
+
+.score-tier-perfect { color: var(--green); }
+.score-tier-good    { color: #6ecf9a; }
+.score-tier-okay    { color: #e8b84b; }
+.score-tier-poor    { color: #d96060; }
+
+[data-theme="light"] .score-tier-good  { color: #5577cc; }
+[data-theme="light"] .score-tier-okay  { color: #a06010; }
+[data-theme="light"] .score-tier-poor  { color: #c03030; }
