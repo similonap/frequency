@@ -10,43 +10,55 @@ import { useDailyFreq } from './hooks/useDailyFreq'
 // ── App ───────────────────────────────────────────────────────
 
 function App() {
-  const [hovered,          setHovered]          = useState<Mode | null>(null)
-  const [hoveredSub,       setHoveredSub]       = useState<OscPreset | null>(null)
-  const [launched,         setLaunched]         = useState<Mode | null>(null)
-  const [practiceExpanded, setPracticeExpanded] = useState(false)
-  const [freqCount,        setFreqCount]        = useState<FreqCount>(1)
-  const [instant,          setInstant]          = useState(false)
-  const [isDark,           setIsDark]           = useState(true)
+  const [hovered,    setHovered]    = useState<Mode | null>(null)
+  const [hoveredSub, setHoveredSub] = useState<OscPreset | null>(null)
+  const [expanded,   setExpanded]   = useState<null | 'practice' | 'daily'>(null)
+  const [launched,   setLaunched]   = useState<Mode | null>(null)
+  const [freqCount,  setFreqCount]  = useState<FreqCount>(1)
+  const [oneshot,    setOneShot]    = useState(false)
+  const [isDark,     setIsDark]     = useState(true)
   const daily = useDailyFreq()
 
-  const oscPreset: OscPreset | null = practiceExpanded ? hoveredSub : hovered
+  const oscPreset: OscPreset | null = expanded ? hoveredSub : hovered
 
   useEffect(() => {
     document.documentElement.dataset.theme = isDark ? 'dark' : 'light'
   }, [isDark])
 
   const handleModeClick = (id: Mode) => {
-    if (id === 'single') { setPracticeExpanded(true) }
-    else { setLaunched(id) }
+    if (id === 'single') setExpanded('practice')
+    else setExpanded('daily')
   }
 
   const launchPractice = (count: FreqCount, inst: boolean) => {
     setFreqCount(count)
-    setInstant(inst)
+    setOneShot(inst)
     setLaunched('single')
   }
+
+  const launchDaily = (count: FreqCount, inst: boolean) => {
+    setFreqCount(count)
+    setOneShot(inst)
+    setLaunched('world')
+  }
+
+  const dailyFreqs: [number, number] | null =
+    launched === 'world' && daily.single != null && daily.multi != null
+      ? (freqCount === 1 ? [daily.single, 0] : (oneshot ? daily.multi : daily.oneshot))
+      : null
+
 
   if (launched) {
     return (
       <div className="game-view">
         <Header isDark={isDark} onToggleTheme={() => setIsDark(d => !d)} />
         <GameScreen
-          key={`${launched}-${freqCount}-${instant}`}
+          key={`${launched}-${freqCount}-${oneshot}`}
           isDark={isDark}
           freqCount={freqCount}
-          instant={instant}
-          dailyFreq={launched === 'world' ? daily.freq : null}
-          onBack={() => { setLaunched(null); setPracticeExpanded(false) }}
+          oneshot={oneshot}
+          dailyFreqs={dailyFreqs}
+          onBack={() => { setLaunched(null); setExpanded(null) }}
         />
       </div>
     )
@@ -60,12 +72,13 @@ function App() {
       </section>
       <ModeSelector
         hovered={hovered}
-        practiceExpanded={practiceExpanded}
+        expanded={expanded}
         onHover={setHovered}
         onSubHover={setHoveredSub}
         onModeClick={handleModeClick}
-        onPracticeBack={() => setPracticeExpanded(false)}
+        onBack={() => setExpanded(null)}
         onLaunchPractice={launchPractice}
+        onLaunchDaily={launchDaily}
       />
       <section className="scope-section">
         <div className="scope-frame">

@@ -13,15 +13,15 @@ interface GameScreenProps {
   isDark: boolean
   onBack: () => void
   freqCount: FreqCount
-  instant?: boolean
-  dailyFreq?: number | null
+  oneshot?: boolean
+  dailyFreqs?: [number, number] | null
 }
 
-export default function GameScreen({ isDark, onBack, freqCount, instant = false, dailyFreq = null }: GameScreenProps) {
+export default function GameScreen({ isDark, onBack, freqCount, oneshot = false, dailyFreqs = null }: GameScreenProps) {
   const [phase,        setPhase]       = useState<GamePhase>('listen')
   const [targetFreqs,  setTargetFreqs] = useState<[number, number]>(() =>
-    dailyFreq != null ? [dailyFreq, 0] as [number, number]
-    : freqCount === 1 ? [randomFreq(), 0] as [number, number]
+    dailyFreqs != null ? dailyFreqs
+    : freqCount === 1  ? [randomFreq(), 0] as [number, number]
     : randomTwoFreqs()
   )
   const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([FREQ_MIN, FREQ_MIN])
@@ -38,7 +38,7 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false,
       const t = setTimeout(() => { audio.stop(); setPhase('guess') }, 4000)
       return () => { clearTimeout(t); audio.stop() }
     }
-    if (instant) {
+    if (oneshot) {
       // Multi Instant: play both together immediately, then guess
       setListenStep(2)
       audio.play(targetFreqs)
@@ -73,7 +73,7 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false,
 
   const playAgain = () => {
     setTargetFreqs(
-      dailyFreq != null ? [dailyFreq, 0] as [number, number]
+      dailyFreqs != null ? dailyFreqs
       : freqCount === 1  ? [randomFreq(), 0] as [number, number]
       : randomTwoFreqs()
     )
@@ -97,7 +97,7 @@ export default function GameScreen({ isDark, onBack, freqCount, instant = false,
       {phase === 'listen' && (
         <div className="phase-listen">
           <p className="phase-label">listen carefully</p>
-          {freqCount === 2 && !instant && (
+          {freqCount === 2 && !oneshot && (
             <div className="listen-steps">
               {LISTEN_STEPS.map((s, i) => (
                 <span key={i} className={`listen-step${listenStep === i ? ' is-active' : ''}`}>

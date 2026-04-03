@@ -3,9 +3,9 @@ import './ModeSelector.css'
 import { MODE_META, PRACTICE_SUBS } from '../constants'
 import type { Mode, OscPreset, FreqCount } from '../types'
 
-// ── Practice sub-mode icons ───────────────────────────────────
+// ── Sub-mode icons ────────────────────────────────────────────
 
-const PRACTICE_ICONS: React.ReactNode[] = [
+const SUB_ICONS: React.ReactNode[] = [
   // Single
   (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -19,7 +19,7 @@ const PRACTICE_ICONS: React.ReactNode[] = [
       <path d="M2 15 Q5 9 9 15 Q13 21 16 15 Q19 9 22 15" strokeOpacity="0.5" />
     </svg>
   ),
-  // One-Shot (beat frequency — amplitude envelope of two freqs summed)
+  // One-Shot
   (
     <svg viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M2 12 Q4 4 6 12 Q8 20 10 12 Q11 9 12 12 Q13 15 14 12 Q16 4 18 12 Q20 20 22 12" />
@@ -27,7 +27,7 @@ const PRACTICE_ICONS: React.ReactNode[] = [
   ),
 ]
 
-// ── Mode icon (per-mode SVG) ──────────────────────────────────
+// ── Mode icon ─────────────────────────────────────────────────
 
 function ModeIcon({ mode }: { mode: Mode }) {
   if (mode === 'single') return (
@@ -49,27 +49,31 @@ function ModeIcon({ mode }: { mode: Mode }) {
 
 interface ModeSelectorProps {
   hovered: Mode | null
-  practiceExpanded: boolean
+  expanded: null | 'practice' | 'daily'
   onHover: (mode: Mode | null) => void
   onSubHover: (preset: OscPreset | null) => void
   onModeClick: (mode: Mode) => void
-  onPracticeBack: () => void
-  onLaunchPractice: (count: FreqCount, instant: boolean) => void
+  onBack: () => void
+  onLaunchPractice: (count: FreqCount, oneshot: boolean) => void
+  onLaunchDaily: (count: FreqCount, oneshot: boolean) => void
 }
 
 export default function ModeSelector({
   hovered,
-  practiceExpanded,
+  expanded,
   onHover,
   onSubHover,
   onModeClick,
-  onPracticeBack,
+  onBack,
   onLaunchPractice,
+  onLaunchDaily,
 }: ModeSelectorProps) {
+  const trackClass = expanded ? `modes-track is-${expanded}` : 'modes-track'
+
   return (
     <section className="modes-section">
       <div className="modes-switcher">
-        <div className={`modes-track${practiceExpanded ? ' is-expanded' : ''}`}>
+        <div className={trackClass}>
 
           {/* Panel 1 — main modes */}
           <div className="modes-panel">
@@ -82,7 +86,7 @@ export default function ModeSelector({
                   onMouseEnter={() => onHover(id)}
                   onMouseLeave={() => onHover(null)}
                   onClick={() => onModeClick(id)}
-                  tabIndex={practiceExpanded ? -1 : 0}
+                  tabIndex={expanded ? -1 : 0}
                 >
                   <div className="mode-btn-icon"><ModeIcon mode={id} /></div>
                   <span className="mode-btn-label">{label}</span>
@@ -95,23 +99,46 @@ export default function ModeSelector({
           {/* Panel 2 — practice sub-modes */}
           <div className="modes-panel">
             <div className="modes-panel-hd">
-              <button
-                className="sub-back"
-                onClick={onPracticeBack}
-                tabIndex={practiceExpanded ? 0 : -1}
-              >← back</button>
+              <button className="sub-back" onClick={onBack} tabIndex={expanded === 'practice' ? 0 : -1}>
+                ← back
+              </button>
             </div>
             <div className="modes-grid">
-              {PRACTICE_SUBS.map(({ count, instant, label, sub, preset }, i) => (
+              {PRACTICE_SUBS.map(({ count, oneshot, label, sub, preset }, i) => (
                 <button
-                  key={`${count}-${instant}`}
+                  key={`${count}-${oneshot}`}
                   className="mode-btn"
-                  onClick={() => onLaunchPractice(count, instant)}
+                  onClick={() => onLaunchPractice(count, oneshot)}
                   onMouseEnter={() => onSubHover(preset)}
                   onMouseLeave={() => onSubHover(null)}
-                  tabIndex={practiceExpanded ? 0 : -1}
+                  tabIndex={expanded === 'practice' ? 0 : -1}
                 >
-                  <div className="mode-btn-icon">{PRACTICE_ICONS[i]}</div>
+                  <div className="mode-btn-icon">{SUB_ICONS[i]}</div>
+                  <span className="mode-btn-label">{label}</span>
+                  <span className="mode-btn-sub">{sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Panel 3 — daily sub-modes */}
+          <div className="modes-panel">
+            <div className="modes-panel-hd">
+              <button className="sub-back" onClick={onBack} tabIndex={expanded === 'daily' ? 0 : -1}>
+                ← back
+              </button>
+            </div>
+            <div className="modes-grid">
+              {PRACTICE_SUBS.map(({ count, oneshot, label, sub, preset }, i) => (
+                <button
+                  key={`${count}-${oneshot}`}
+                  className="mode-btn"
+                  onClick={() => onLaunchDaily(count, oneshot)}
+                  onMouseEnter={() => onSubHover(preset)}
+                  onMouseLeave={() => onSubHover(null)}
+                  tabIndex={expanded === 'daily' ? 0 : -1}
+                >
+                  <div className="mode-btn-icon">{SUB_ICONS[i]}</div>
                   <span className="mode-btn-label">{label}</span>
                   <span className="mode-btn-sub">{sub}</span>
                 </button>

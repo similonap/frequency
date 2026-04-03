@@ -72,8 +72,8 @@ export const MODE_META: { id: Mode; label: string; sub: string }[] = [
 
 // ── Practice sub-mode data (icons rendered in ModeSelector) ──
 
-export const PRACTICE_SUBS: { count: FreqCount; instant: boolean; label: string; sub: string; preset: 'sub-single' | 'sub-multi' | 'sub-oneshot' }[] = [
-  { count: 1, instant: false, label: 'Single',   sub: 'one frequency',    preset: 'sub-single'  },
-  { count: 2, instant: false, label: 'Multi',    sub: 'two frequencies',  preset: 'sub-multi'   },
-  { count: 2, instant: true,  label: 'One-Shot', sub: 'hear both at once', preset: 'sub-oneshot' },
+export const PRACTICE_SUBS: { count: FreqCount; oneshot: boolean; label: string; sub: string; preset: 'sub-single' | 'sub-multi' | 'sub-oneshot' }[] = [
+  { count: 1, oneshot: false, label: 'Single',   sub: 'one frequency',    preset: 'sub-single'  },
+  { count: 2, oneshot: false, label: 'Multi',    sub: 'two frequencies',  preset: 'sub-multi'   },
+  { count: 2, oneshot: true,  label: 'One-Shot', sub: 'hear both at once', preset: 'sub-oneshot' },
 ]

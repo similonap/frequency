@@ -75,7 +75,7 @@
   color: var(--text-dim);
 }
 
-/* ─── Practice sub-modes (sliding panels) ────────────────── */
+/* ─── Sub-mode panels (sliding) ──────────────────────────── */
 
 .modes-switcher {
   overflow: hidden;
@@ -84,16 +84,15 @@
 
 .modes-track {
   display: flex;
-  width: 200%;
+  width: 300%;
   transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.modes-track.is-expanded {
-  transform: translateX(-50%);
-}
+.modes-track.is-practice { transform: translateX(-33.333%); }
+.modes-track.is-daily    { transform: translateX(-66.667%); }
 
 .modes-panel {
-  width: 50%;
+  width: 33.333%;
   display: flex;
   flex-direction: column;
   align-items: center;
