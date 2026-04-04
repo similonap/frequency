@@ -40,6 +40,8 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
   const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([FREQ_MIN, FREQ_MIN])
   const [listenStep,   setListenStep]  = useState<0 | 1 | 2>(0)
   const [streak,       setStreak]      = useState(0)
+  const [brokenStreak, setBrokenStreak] = useState(0)
+  const [copied,       setCopied]       = useState(false)
   const audio = useAudio()
 
   useEffect(() => () => { audio.stop() }, [])
@@ -89,12 +91,27 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
       const submitTotal = freqCount === 1
         ? calcScore(targetFreqs[0], guessFreqs[0])
         : calcDualScore(targetFreqs, guessFreqs).total
-      setStreak(s => submitTotal >= 9.5 ? s + 1 : 0)
+      if (submitTotal >= 9.5) {
+        setStreak(s => s + 1)
+        setBrokenStreak(0)
+      } else {
+        setBrokenStreak(streak)
+        setStreak(0)
+      }
     }
     setPhase('result')
   }
 
+  const handleCopy = () => {
+    const text = `× ${brokenStreak} streak on FREQUENCY — a frequency matching game. Can you beat it?`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   const playAgain = () => {
+    setBrokenStreak(0)
     setTargetFreqs(
       dailyFreqs != null ? dailyFreqs
       : freqCount === 1  ? [randomFreq(), 0] as [number, number]
@@ -172,7 +189,9 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
             <span className={`score-num score-tier-${scoreTier(total)}`}>{total.toFixed(1)}</span>
             <span className={`score-label score-tier-${scoreTier(total)}`}>{scoreLabel(total)}</span>
             {!daily && streak > 0 && (
-              <span className="streak-counter">× {streak}</span>
+              <span className="streak-counter">
+                <span className="streak-word">streak</span> × {streak}
+              </span>
             )}
           </div>
 
@@ -218,10 +237,17 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
             </div>
           </div>
 
-          {!daily && total >= 8.0
-            ? <button className="submit-btn streak-btn" onClick={playAgain}>continue streak →</button>
-            : <button className="submit-btn" onClick={playAgain}>play again →</button>
-          }
+          <div className="result-actions">
+            {!daily && total >= 9.5
+              ? <button className="submit-btn streak-btn" onClick={playAgain}>continue streak →</button>
+              : <button className="submit-btn" onClick={playAgain}>play again →</button>
+            }
+            {!daily && (streak > 0 || brokenStreak > 0) && (
+              <button className="streak-share-btn" onClick={handleCopy}>
+                {copied ? 'copied!' : `share × ${streak > 0 ? streak : brokenStreak}`}
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

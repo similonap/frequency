@@ -178,7 +178,7 @@
   background: var(--card-hover);
 }
 
-/* Streak counter */
+/* Streak counter (active streak in score block) */
 .streak-counter {
   font-size: clamp(18px, 4vh, 32px);
   font-weight: 700;
@@ -187,6 +187,42 @@
   line-height: 1;
   font-variant-numeric: tabular-nums;
   margin-left: 4px;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.streak-word {
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+  text-transform: lowercase;
+  align-self: center;
+}
+
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.streak-share-btn {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.streak-share-btn:hover {
+  color: var(--green);
+  border-color: var(--border-active);
 }
 
 .streak-btn {
