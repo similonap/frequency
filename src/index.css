@@ -5,8 +5,8 @@
   --green-dim:     rgba(0, 255, 136, 0.45);
   --green-faint:   rgba(0, 255, 136, 0.08);
   --text:          rgba(232, 235, 240, 0.88);
-  --text-dim:      rgba(232, 235, 240, 0.32);
-  --text-faint:    rgba(232, 235, 240, 0.10);
+  --text-dim:      rgba(232, 235, 240, 0.70);
+  --text-faint:    rgba(232, 235, 240, 0.45);
   --border:        rgba(255, 255, 255, 0.06);
   --border-active: rgba(0, 255, 136, 0.30);
   --card-bg:       rgba(255, 255, 255, 0.018);

@@ -20,8 +20,8 @@ export const calcScore = (target: number, guess: number): number => {
 //   const sharp  = 10 * Math.exp(-dist * dist * 3250)
 //   const gentle = 3  * Math.exp(-dist * dist * 130)
 //   return Math.max(0, Math.min(10, Math.max(sharp, gentle)))
-
     let score = (1 - Math.min(1, Math.abs(target - guess) / 20)) * 10;
+    console.log(score);
     return score;
 }
 
@@ -40,7 +40,7 @@ export const scoreTier = (s: number): ScoreTier => {
 
 export const scoreLabel = (s: number): string => {
   if (s >= 9.5) return 'perfect'
-  if (s >= 8)   return 'close'
+  if (s >= 8)   return 'nice'
   if (s >= 6)   return 'almost'
   if (s >= 3.5) return 'off'
   return 'way off'

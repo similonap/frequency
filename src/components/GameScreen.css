@@ -178,6 +178,22 @@
   background: var(--card-hover);
 }
 
+/* Streak counter */
+.streak-counter {
+  font-size: clamp(18px, 4vh, 32px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-dim);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+
+.streak-btn {
+  color: var(--text);
+  border-color: var(--border-active);
+}
+
 /* Result */
 .score-block {
   display: flex;

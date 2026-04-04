@@ -39,6 +39,7 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
   )
   const [guessFreqs,   setGuessFreqs]  = useState<[number, number]>([FREQ_MIN, FREQ_MIN])
   const [listenStep,   setListenStep]  = useState<0 | 1 | 2>(0)
+  const [streak,       setStreak]      = useState(0)
   const audio = useAudio()
 
   useEffect(() => () => { audio.stop() }, [])
@@ -82,7 +83,16 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
     audio.setFreqs(freqCount === 1 ? [next[0]] : next)
   }
 
-  const submit = () => { audio.stop(); setPhase('result') }
+  const submit = () => {
+    audio.stop()
+    if (!daily) {
+      const submitTotal = freqCount === 1
+        ? calcScore(targetFreqs[0], guessFreqs[0])
+        : calcDualScore(targetFreqs, guessFreqs).total
+      setStreak(s => submitTotal >= 9.5 ? s + 1 : 0)
+    }
+    setPhase('result')
+  }
 
   const playAgain = () => {
     setTargetFreqs(
@@ -161,6 +171,9 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
           <div className="score-block">
             <span className={`score-num score-tier-${scoreTier(total)}`}>{total.toFixed(1)}</span>
             <span className={`score-label score-tier-${scoreTier(total)}`}>{scoreLabel(total)}</span>
+            {!daily && streak > 0 && (
+              <span className="streak-counter">× {streak}</span>
+            )}
           </div>
 
           <div className="result-waves">
@@ -205,7 +218,10 @@ export default function GameScreen({ isDark, onBack, freqCount, oneshot = false,
             </div>
           </div>
 
-          <button className="submit-btn" onClick={playAgain}>play again →</button>
+          {!daily && total >= 8.0
+            ? <button className="submit-btn streak-btn" onClick={playAgain}>continue streak →</button>
+            : <button className="submit-btn" onClick={playAgain}>play again →</button>
+          }
         </div>
       )}
     </div>
